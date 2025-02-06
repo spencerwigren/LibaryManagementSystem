@@ -9,32 +9,9 @@ import (
 )
 
 // getting demo writen
-// the struct are going to act as the database for right now
 // the terminal is going ot act as the UI for now
 
-// type book struct {
-// 	title      string
-// 	pageNumber int
-// 	author     string
-// }
-
-// type movie struct {
-// 	title string
-// }
-
-// type videoGame struct {
-// 	title string
-// }
-
 func main() {
-	// bookInfo := addBookInfo("testBook", 125, "Me")
-	// movieInfo := addMovieInfo("testMovie")
-	// videoGameInfo := addVideoGameInfo("testVideoGame")
-
-	// println(bookInfo.title)
-	// println(movieInfo.title)
-	// println(videoGameInfo.title)
-
 	initdatabase() // used for creating the database
 
 	db, err := sql.Open("sqlite3", "example.db")
@@ -90,29 +67,7 @@ func initdatabase() {
 }
 
 func dropTables(db *sql.DB, err error) {
-
 	checkError(err)
-	// // Drop users table
-	// tableName := "users"
-	// query := fmt.Sprintf("DROP TABLE IF EXISTS %s;", tableName)
-
-	// _, err = db.Exec(query)
-	// if err != nil {
-	// 	log.Fatal("Failed to delete table:", err)
-	// }
-
-	// //Drop books table
-	// tableName = "books"
-	// query = fmt.Sprintf("DROP TABLE IF EXISTS %s;", tableName)
-
-	// _, err = db.Exec(query)
-	// if err != nil {
-	// 	log.Fatal("Faild to delete table:", err)
-	// }
-
-	// //Drop moive table
-	// tableName = "movies"
-	// query = fmt.Sprintf("DROP TABLE IF EXISTS %s;", tableNam)
 
 	tables := []string{"users", "books", "movies", "videoGames"}
 
