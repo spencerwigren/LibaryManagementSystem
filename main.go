@@ -20,10 +20,10 @@ func main() {
 	checkError(err)
 	defer db.Close()
 
-	addUserInfo("Admin", db, err)
-	addBookInfo("testBook", 125, "Admin", db, err)
-	addMovieInfo("testMoive", db, err)
-	addVideoGameInfo("testVideoGame", db, err)
+	utils.AddUserInfo("Admin", db, err)
+	utils.AddBookInfo("testBook", 125, "Admin", db, err)
+	utils.AddMovieInfo("testMoive", db, err)
+	utils.AddVideoGameInfo("testVideoGame", db, err)
 	queryDB(db, err)
 
 }
@@ -105,40 +105,6 @@ func queryDB(db *sql.DB, err error) {
 		fmt.Printf("Video Games ID: %d, Title: %s\n", videoGameId, title)
 	}
 
-}
-
-func addBookInfo(title string, pageNumber int, author string, db *sql.DB, err error) {
-	checkError(err)
-
-	insertSQL := `INSERT INTO books (title, pageNumber, author) VALUES (?, ?, ?)`
-	_, err = db.Exec(insertSQL, title, pageNumber, author)
-	checkError(err)
-
-}
-
-func addMovieInfo(title string, db *sql.DB, err error) {
-	checkError(err)
-
-	insertSQL := `INSERT INTO movies (title) VALUES (?)`
-	_, err = db.Exec(insertSQL, title)
-	checkError(err)
-
-}
-
-func addVideoGameInfo(title string, db *sql.DB, err error) {
-	checkError(err)
-
-	insertSQL := `INSERT INTO videoGames (title) values (?)`
-	_, err = db.Exec(insertSQL, title)
-	checkError(err)
-}
-
-func addUserInfo(name string, db *sql.DB, err error) {
-	checkError(err)
-
-	insertSQL := `INSERT INTO users (name) 	VALUES (?)`
-	_, err = db.Exec(insertSQL, name)
-	checkError(err)
 }
 
 func checkError(err error) {
