@@ -2,7 +2,7 @@
 
 
 ### How to Run 
-*still in works*
+*Working on Demo*
 
 run these commands in the terminal
 1. >$go build main.go
