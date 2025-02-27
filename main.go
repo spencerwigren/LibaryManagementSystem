@@ -22,28 +22,30 @@ func main() {
 	defer db.Close()
 
 	directory()
+	userCommandExe(db)
 
+	queryDB(db, err)
+
+}
+
+func userCommandExe(db *sql.DB) {
 	check, userCommand := userCommandInput()
 
 	if check {
 		switch userCommand {
 		case 1:
 			// utils.AddBookInfo("testBook", 125, "Admin", db, err)
-			utils.AddBookInfo(db, err)
+			utils.AddBookInfo(db)
 		case 2:
-			utils.AddMovieInfo("testMoive", db, err)
+			utils.AddMovieInfo(db)
 		case 3:
-			utils.AddVideoGameInfo("testVideoGame", db, err)
-
+			utils.AddVideoGameInfo(db)
+		case 4:
+			utils.AddUserInfo(db)
 		}
 	} else {
 		println("Input not valid")
 	}
-
-	utils.AddUserInfo("Admin", db, err)
-
-	queryDB(db, err)
-
 }
 
 func userCommandInput() (bool, int64) {
