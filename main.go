@@ -49,7 +49,7 @@ func userCommandExe(db *sql.DB) {
 
 func userCommandInput() (bool, int64) {
 	// This is for the commandline part
-	// REMOVE AFTER GUI is built
+	// REMOVE AFTER TUI is built
 	var command string
 	commandList := [5]int64{1, 2, 3, 4, 5}
 	fmt.Print("> ")
@@ -70,7 +70,7 @@ func userCommandInput() (bool, int64) {
 
 func directory() {
 	// this func is for showing commands in the terminal
-	// will replace with a faq once GUI uis build
+	// TODO: will replace with a faq once TUI uis build
 
 	fmt.Println(`
 	========================
