@@ -6,6 +6,7 @@ import (
 	"log"
 	"strconv"
 
+	"Libarymanagementsystem/tui"
 	"Libarymanagementsystem/utils"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -24,6 +25,8 @@ func main() {
 	directory()
 	userCommandExe(db)
 	utils.Query(db)
+
+	tui.App()
 
 }
 
