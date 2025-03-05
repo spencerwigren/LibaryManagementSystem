@@ -30,6 +30,9 @@ func App() {
 		AddItem(newPrimitive("Footer"), 2, 0, 1, 3, 0, 0, false)
 
 	addBookMedia(pages)
+	addMovieMedia(pages)
+	addVidoGameMedia(pages)
+	addUser(pages)
 	mediaModal(pages)
 
 	// Main menu prmitive to interact with TUI
@@ -38,7 +41,7 @@ func App() {
 			// TODO create function to seach data base
 			AddInputField("Search", "", 0, nil, nil).
 			AddButton("Add Media", func() {
-				// pages.SwitchToPage("addMedia")
+				// pages.SwitchToPage("addBook")
 				pages.SwitchToPage("mediaModal")
 
 			}).
@@ -69,11 +72,17 @@ func App() {
 func mediaModal(pages *tview.Pages) {
 	// Pop up for adding media to app
 	addMediaModal := tview.NewModal().
-		AddButtons([]string{"Add Books", "Back"}).
+		AddButtons([]string{"Add Books", "Add Movie", "Add Game", "Add User", "Back"}).
 		SetText("Add Media").
 		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 			if buttonLabel == "Add Books" {
-				pages.SwitchToPage("addMedia")
+				pages.SwitchToPage("addBook")
+			} else if buttonLabel == "Add Movie" {
+				pages.SwitchToPage("addMovie")
+			} else if buttonLabel == "Add Game" {
+				pages.SwitchToPage("addGame")
+			} else if buttonLabel == "Add User" {
+				pages.SwitchToPage("addUser")
 			} else if buttonLabel == "Back" {
 				pages.SwitchToPage("mainMenu")
 			}
@@ -85,13 +94,28 @@ func mediaModal(pages *tview.Pages) {
 }
 
 func addBookMedia(pages *tview.Pages) {
-	// TODO make this for the add Book form for addMediaForm
+	// TODO: have the input fields return user input and input the data into the db
+
+	titleInput := tview.NewInputField().SetLabel("Input Title: ")
+	pageNumInput := tview.NewInputField().SetLabel("Input Page Number: ")
+	authorInput := tview.NewInputField().SetLabel("Input Author Name: ")
+
 	addMediaForm := tview.NewForm().
-		AddInputField("Input Title: ", "", 0, nil, nil).
-		AddInputField("Input Page Number: ", "", 0, nil, nil).
-		AddInputField("Insert Author Name: ", "", 0, nil, nil).
+		// AddInputField("Input Title: ", "", 0, nil, nil).
+		AddFormItem(titleInput).
+		AddFormItem(pageNumInput).
+		AddFormItem(authorInput).
 		AddButton("Submit", func() {
-			fmt.Println("Items Submited")
+			// fmt.Println("Items Submited")
+			title := titleInput.GetText()
+			pageNum := pageNumInput.GetText()
+			author := authorInput.GetText()
+
+			// Check if all fields are filled
+			if title != "" && pageNum != "" && author != "" {
+				//TODO have input fields input into db
+				fmt.Println("Items Submited")
+			}
 		}).
 		AddButton("Back", func() {
 			// app.SetRoot(grid, true)
@@ -99,12 +123,101 @@ func addBookMedia(pages *tview.Pages) {
 		})
 
 	// This has to be set out side of the tview.NewForm() for the input fields and buttons to show
-	addMediaForm.SetBorder(true).SetTitle("Add Media").SetTitleAlign(tview.AlignCenter)
+	addMediaForm.SetBorder(true).SetTitle("Add Book").SetTitleAlign(tview.AlignCenter)
 
 	// Setting the addMediaForm to be shown
-	addMediaFlex := tview.NewFlex().
+	addBookFlex := tview.NewFlex().
 		SetDirection(tview.FlexColumn).
 		AddItem(addMediaForm, 0, 1, true)
 
-	pages.AddPage("addMedia", addMediaFlex, true, false)
+	pages.AddPage("addBook", addBookFlex, true, false)
+}
+
+//-----Do Note that the following function are patterened after addBookMedia()-----
+
+func addMovieMedia(pages *tview.Pages) {
+	// TODO: have the input fields return user input and input the data into the db
+
+	titleInput := tview.NewInputField().SetLabel("Input Title Name: ")
+
+	addMovieForm := tview.NewForm().
+		AddFormItem(titleInput).
+		AddButton("Submit", func() {
+			title := titleInput.GetText()
+			//TODO have input fields input into db
+			if title != "" {
+				fmt.Println("Item Submited")
+			}
+		}).
+		AddButton("Back", func() {
+			// app.SetRoot(grid, true)
+			pages.SwitchToPage("mediaModal")
+		})
+
+	addMovieForm.SetBorder(true).SetTitle("Add Movie").SetTitleAlign(tview.AlignCenter)
+
+	addBookFlex := tview.NewFlex().
+		SetDirection(tview.FlexColumn).
+		AddItem(addMovieForm, 0, 1, true)
+
+	pages.AddPage("addMovie", addBookFlex, true, false)
+}
+
+func addVidoGameMedia(pages *tview.Pages) {
+	// TODO: have the input fields return user input and input the data into the db
+
+	titleInput := tview.NewInputField().SetLabel("Input Video Game Title: ")
+
+	addGameForm := tview.NewForm().
+		AddFormItem(titleInput).
+		AddButton("Submit", func() {
+			title := titleInput.GetText()
+
+			//TODO have input fields input into db
+			if title != "" {
+				fmt.Println("Item Submited")
+			}
+		}).
+		AddButton("Back", func() {
+			// app.SetRoot(grid, true)
+			pages.SwitchToPage("mediaModal")
+		})
+
+	addGameForm.SetBorder(true).SetTitle("Add Movie").SetTitleAlign(tview.AlignCenter)
+
+	addGameFlex := tview.NewFlex().
+		SetDirection(tview.FlexColumn).
+		AddItem(addGameForm, 0, 1, true)
+
+	pages.AddPage("addGame", addGameFlex, true, false)
+}
+
+func addUser(pages *tview.Pages) {
+	// TODO: have the input fields return user input and input the data into the db
+
+	userNameInput := tview.NewInputField().SetLabel("Input User Name")
+
+	addUserForm := tview.NewForm().
+		AddFormItem(userNameInput).
+		AddButton("Submit", func() {
+			user := userNameInput.GetText()
+
+			//TODO have input fields input into db
+			if user != "" {
+				fmt.Println("Item Submited")
+			}
+		}).
+		AddButton("Back", func() {
+			// app.SetRoot(grid, true)
+			pages.SwitchToPage("mediaModal")
+		})
+
+	addUserForm.SetBorder(true).SetTitle("Add Movie").SetTitleAlign(tview.AlignCenter)
+
+	addUserFlex := tview.NewFlex().
+		SetDirection(tview.FlexColumn).
+		AddItem(addUserForm, 0, 1, true)
+
+	pages.AddPage("addUser", addUserFlex, true, false)
+
 }
