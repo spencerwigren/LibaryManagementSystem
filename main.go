@@ -19,6 +19,7 @@ func main() {
 	utils.InitDatabase()
 
 	db, err := sql.Open("sqlite3", "projectdb.db")
+	// TODO if only one check error in main remove function and check it here.
 	checkError(err)
 	defer db.Close()
 
@@ -26,7 +27,7 @@ func main() {
 	userCommandExe(db)
 	utils.Query(db)
 
-	tui.App()
+	tui.App(db)
 
 }
 
@@ -35,15 +36,16 @@ func userCommandExe(db *sql.DB) {
 
 	if check {
 		switch userCommand {
-		case 1:
-			// utils.AddBookInfo("testBook", 125, "Admin", db, err)
-			utils.AddBookInfo(db)
-		case 2:
-			utils.AddMovieInfo(db)
-		case 3:
-			utils.AddVideoGameInfo(db)
+		// case 1:
+		// 	utils.AddBookInfo("testBook", 125, "Admin", db)
+		// 	// utils.AddBookInfo(db)
+		// case 2:
+		// 	utils.AddMovieInfo(db)
+		// case 3:
+		// 	utils.AddVideoGameInfo(db)
 		case 4:
-			utils.AddUserInfo(db)
+			// utils.AddUserInfo(db)
+			utils.Query(db)
 		}
 	} else {
 		println("Input not valid")

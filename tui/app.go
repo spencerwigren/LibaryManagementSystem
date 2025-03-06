@@ -1,13 +1,17 @@
 package tui
 
 import (
+	"database/sql"
 	"fmt"
+	"strconv"
+
+	"Libarymanagementsystem/utils"
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
-func App() {
+func App(db *sql.DB) {
 	// This lay out is found: https://github.com/rivo/tview/wiki/Grid
 	// Will be adapting it for my project.
 
@@ -29,10 +33,10 @@ func App() {
 		AddItem(newPrimitive("Header"), 0, 0, 1, 3, 0, 0, false).
 		AddItem(newPrimitive("Footer"), 2, 0, 1, 3, 0, 0, false)
 
-	addBookMedia(pages)
-	addMovieMedia(pages)
-	addVidoGameMedia(pages)
-	addUser(pages)
+	addBookMedia(db, pages)
+	addMovieMedia(db, pages)
+	addVidoGameMedia(db, pages)
+	addUser(db, pages)
 	mediaModal(pages)
 
 	// Main menu prmitive to interact with TUI
@@ -69,6 +73,9 @@ func App() {
 	}
 }
 
+/*
+This is for manganing adding media to db
+*/
 func mediaModal(pages *tview.Pages) {
 	// Pop up for adding media to app
 	addMediaModal := tview.NewModal().
@@ -93,7 +100,7 @@ func mediaModal(pages *tview.Pages) {
 	pages.AddPage("mediaModal", addMediaModal, true, false)
 }
 
-func addBookMedia(pages *tview.Pages) {
+func addBookMedia(db *sql.DB, pages *tview.Pages) {
 	// TODO: have the input fields return user input and input the data into the db
 
 	titleInput := tview.NewInputField().SetLabel("Input Title: ")
@@ -106,7 +113,6 @@ func addBookMedia(pages *tview.Pages) {
 		AddFormItem(pageNumInput).
 		AddFormItem(authorInput).
 		AddButton("Submit", func() {
-			// fmt.Println("Items Submited")
 			title := titleInput.GetText()
 			pageNum := pageNumInput.GetText()
 			author := authorInput.GetText()
@@ -114,7 +120,18 @@ func addBookMedia(pages *tview.Pages) {
 			// Check if all fields are filled
 			if title != "" && pageNum != "" && author != "" {
 				//TODO have input fields input into db
-				fmt.Println("Items Submited")
+				// fmt.Println("Items Submited")
+
+				// Convert pageNum from str to int
+				pageNumber, err := strconv.Atoi(pageNum)
+				if err != nil {
+					// TODO add error to page
+					fmt.Println(pageNumber, "Not a Valid Page Number")
+					return
+				}
+
+				utils.AddBookInfo(title, pageNumber, author, db)
+
 			}
 		}).
 		AddButton("Back", func() {
@@ -133,9 +150,9 @@ func addBookMedia(pages *tview.Pages) {
 	pages.AddPage("addBook", addBookFlex, true, false)
 }
 
-//-----Do Note that the following function are patterened after addBookMedia()-----
+//-----Do Note that the following function are patterened after addBookMedia()-----//
 
-func addMovieMedia(pages *tview.Pages) {
+func addMovieMedia(db *sql.DB, pages *tview.Pages) {
 	// TODO: have the input fields return user input and input the data into the db
 
 	titleInput := tview.NewInputField().SetLabel("Input Title Name: ")
@@ -146,7 +163,9 @@ func addMovieMedia(pages *tview.Pages) {
 			title := titleInput.GetText()
 			//TODO have input fields input into db
 			if title != "" {
-				fmt.Println("Item Submited")
+				// fmt.Println("Item Submited")
+				utils.AddMovieInfo(title, db)
+
 			}
 		}).
 		AddButton("Back", func() {
@@ -163,7 +182,7 @@ func addMovieMedia(pages *tview.Pages) {
 	pages.AddPage("addMovie", addBookFlex, true, false)
 }
 
-func addVidoGameMedia(pages *tview.Pages) {
+func addVidoGameMedia(db *sql.DB, pages *tview.Pages) {
 	// TODO: have the input fields return user input and input the data into the db
 
 	titleInput := tview.NewInputField().SetLabel("Input Video Game Title: ")
@@ -175,7 +194,8 @@ func addVidoGameMedia(pages *tview.Pages) {
 
 			//TODO have input fields input into db
 			if title != "" {
-				fmt.Println("Item Submited")
+				// fmt.Println("Item Submited")
+				utils.AddVideoGameInfo(title, db)
 			}
 		}).
 		AddButton("Back", func() {
@@ -192,7 +212,7 @@ func addVidoGameMedia(pages *tview.Pages) {
 	pages.AddPage("addGame", addGameFlex, true, false)
 }
 
-func addUser(pages *tview.Pages) {
+func addUser(db *sql.DB, pages *tview.Pages) {
 	// TODO: have the input fields return user input and input the data into the db
 
 	userNameInput := tview.NewInputField().SetLabel("Input User Name")
@@ -204,7 +224,8 @@ func addUser(pages *tview.Pages) {
 
 			//TODO have input fields input into db
 			if user != "" {
-				fmt.Println("Item Submited")
+				// fmt.Println("Item Submited")
+				utils.AddUserInfo(user, db)
 			}
 		}).
 		AddButton("Back", func() {
