@@ -40,10 +40,12 @@ func App(db *sql.DB) {
 	mediaModal(pages)
 
 	// Main menu prmitive to interact with TUI
+	searchInput := tview.NewInputField().SetLabel("Search: ")
+
 	menuPrimitive := func() tview.Primitive {
 		menuPrim := tview.NewForm().
 			// TODO create function to seach data base
-			AddInputField("Search", "", 0, nil, nil).
+			AddFormItem(searchInput).
 			AddButton("Add Media", func() {
 				// pages.SwitchToPage("addBook")
 				pages.SwitchToPage("mediaModal")
@@ -51,6 +53,14 @@ func App(db *sql.DB) {
 			}).
 			AddButton("Quit", func() {
 				app.Stop()
+			}).
+			AddButton("Search", func() {
+				search := searchInput.GetText()
+				if search != "" {
+					// Temp just for right now
+					// This will need to get the input and search the database for items
+					utils.AddUserInfo(search, db)
+				}
 			})
 
 		return menuPrim
@@ -119,8 +129,6 @@ func addBookMedia(db *sql.DB, pages *tview.Pages) {
 
 			// Check if all fields are filled
 			if title != "" && pageNum != "" && author != "" {
-				//TODO have input fields input into db
-				// fmt.Println("Items Submited")
 
 				// Convert pageNum from str to int
 				pageNumber, err := strconv.Atoi(pageNum)
