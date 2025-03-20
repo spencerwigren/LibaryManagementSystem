@@ -3,6 +3,7 @@ package tui
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"strconv"
 
 	"Libarymanagementsystem/utils"
@@ -33,6 +34,7 @@ func App(db *sql.DB) {
 		AddItem(newPrimitive("Header"), 0, 0, 1, 3, 0, 0, false).
 		AddItem(newPrimitive("Footer"), 2, 0, 1, 3, 0, 0, false)
 
+	// Setting Views for each media input
 	addBookMedia(db, pages)
 	addMovieMedia(db, pages)
 	addVidoGameMedia(db, pages)
@@ -42,33 +44,74 @@ func App(db *sql.DB) {
 	// Main menu prmitive to interact with TUI
 	searchInput := tview.NewInputField().SetLabel("Search: ")
 
+	// This is the main interaction view on the TUI
 	menuPrimitive := func() tview.Primitive {
+		var searchResult []interface{}
 		menuPrim := tview.NewForm().
 			// TODO create function to seach data base
 			AddFormItem(searchInput).
+			// Have User Add New Media to DB
 			AddButton("Add Media", func() {
 				// pages.SwitchToPage("addBook")
 				pages.SwitchToPage("mediaModal")
 
 			}).
+			// Exit App
 			AddButton("Quit", func() {
 				app.Stop()
 			}).
+			// Searching through the DB
 			AddButton("Search", func() {
+				//TODO: this may need to be bigger or in it's own function
+				// IDEA: have the mainPrimitive call from here
+				// On press call and update the mainPrimitive
 				search := searchInput.GetText()
 				if search != "" {
 					// Temp just for right now
 					// This will need to get the input and search the database for items
-					utils.AddUserInfo(search, db)
+					// utils.AddUserInfo(search, db)
+
+					searchValue, err := utils.SerachTables(db, search)
+					if err != nil {
+						log.Printf("IN APP: %s", err)
+					}
+					searchResult = searchValue
+					// Loging the values for Debugging
+					for i, ptr := range searchResult {
+						log.Printf("ValuePtrs[%d]: %v", i, *ptr.(*interface{}))
+
+						prtValue, ok := (*(searchResult[i].(*interface{}))).(string)
+						if !ok {
+							log.Println("Failed to convert valuePtrs[1] to str")
+						} else {
+							log.Printf("Converted value: %s", prtValue)
+						}
+					}
+
+					// log.Printf("In Submit Button: %s\n", searchResult...)
+					// searchInput.SetText("")
 				}
 			})
 
 		return menuPrim
 	}
 
-	// Setting more layout in grid
+	// This should be shoing the search results.
+	// IDEA may need to rethink this more
+	mainPrimitive := func() tview.Primitive {
+		// Creating the text view
+		mainPrim := tview.NewTextView().
+			SetTextAlign(tview.AlignCenter).
+			SetWordWrap(true).
+			SetText("Search Results")
+
+		// Sending the mainPrim home
+		return mainPrim
+	}
+
+	// Setting the layout in grid
 	menu := menuPrimitive()
-	main := newPrimitive("Main content")
+	main := mainPrimitive()
 	sideBar := newPrimitive("Side bar")
 
 	// adding menu, main, and sidebar to grid to draw.
@@ -78,13 +121,14 @@ func App(db *sql.DB) {
 
 	pages.AddPage("mainMenu", grid, true, true)
 
+	// Startup of the App
 	if err := app.SetRoot(pages, true).SetFocus(menu).Run(); err != nil {
 		panic(err)
 	}
 }
 
 /*
-This is for manganing adding media to db
+This is for mangaging adding media to db
 */
 func mediaModal(pages *tview.Pages) {
 	// Pop up for adding media to app

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 
 	"Libarymanagementsystem/tui"
@@ -17,6 +18,14 @@ import (
 
 func main() {
 	utils.InitDatabase()
+
+	// Setting up the log
+	file, err := os.OpenFile("log.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.SetFlags(log.Lshortfile)
+	log.SetOutput(file)
 
 	db, err := sql.Open("sqlite3", "projectdb.db")
 	// TODO if only one check error in main remove function and check it here.
