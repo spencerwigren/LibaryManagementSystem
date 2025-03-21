@@ -9,7 +9,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func SerachTables(db *sql.DB, search string) ([]interface{}, error) {
+func SearchTables(db *sql.DB, search string) ([]interface{}, error) {
 	// TODO: may need to find a way to search outside of title, like page number or author
 
 	tableNames, err := fetchTableName(db)
@@ -17,34 +17,35 @@ func SerachTables(db *sql.DB, search string) ([]interface{}, error) {
 		log.Printf("In SearchTables: %s\n", err)
 	}
 
-	/*Debugging Tables
-	temp, err := db.Query("PRAGMA table_info(books);")
-	if err != nil {
-		return nil, err
-	}
-	defer temp.Close()
-
-	log.Println("Table Structure:")
-	for temp.Next() {
-		var cid int
-		var name string
-		var ctype string
-		var notnull int
-		var dflt_value sql.NullString
-		var pk int
-
-		err := temp.Scan(&cid, &name, &ctype, &notnull, &dflt_value, &pk)
+	/*
+		Debugging Tables
+		temp, err := db.Query("PRAGMA table_info(books);")
 		if err != nil {
 			return nil, err
 		}
+		defer temp.Close()
 
-		log.Printf("Column ID: %d, Name: %s, Type: %s, Not Null: %d, Default: %v, Primary Key: %d\n",
-			cid, name, ctype, notnull, dflt_value.String, pk)
-	}
+		log.Println("Table Structure:")
+		for temp.Next() {
+			var cid int
+			var name string
+			var ctype string
+			var notnull int
+			var dflt_value sql.NullString
+			var pk int
 
-	if err = temp.Err(); err != nil {
-		return nil, err
-	}
+			err := temp.Scan(&cid, &name, &ctype, &notnull, &dflt_value, &pk)
+			if err != nil {
+				return nil, err
+			}
+
+			log.Printf("Column ID: %d, Name: %s, Type: %s, Not Null: %d, Default: %v, Primary Key: %d\n",
+				cid, name, ctype, notnull, dflt_value.String, pk)
+		}
+
+		if err = temp.Err(); err != nil {
+			return nil, err
+		}
 	*/
 
 	// [1:] is to skip over the first index of the tableName

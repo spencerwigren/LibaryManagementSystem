@@ -9,6 +9,7 @@ import (
 )
 
 func InitDatabase() {
+	//TODO: have a creation date and modify date
 	// Open (or create) a database
 	db, err := sql.Open("sqlite3", "projectdb.db")
 	checkError(err)
