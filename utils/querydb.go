@@ -10,12 +10,13 @@ import (
 )
 
 func SerachTables(db *sql.DB, search string) ([]interface{}, error) {
+	// TODO: may need to find a way to search outside of title, like page number or author
+
 	tableNames, err := fetchTableName(db)
 	if err != nil {
 		log.Printf("In SearchTables: %s\n", err)
 	}
 
-	// log.Printf("TableNames: %s\n", tableNames)
 	/*Debugging Tables
 	temp, err := db.Query("PRAGMA table_info(books);")
 	if err != nil {
@@ -46,30 +47,41 @@ func SerachTables(db *sql.DB, search string) ([]interface{}, error) {
 	}
 	*/
 
-	// [1:] is to skipp over the first index of the tableName
-	//[]tableNames: [sqlite_sequence users books movies videoGames]
-	//sqlite_sequence is not one of the tables
-	for _, tableName := range tableNames[1:] {
-		// query := fmt.Sprintf("SELECT * FROM %s WHERE rowid IN (SELECT rowid FROM %s WHERE %s LIKE ?)", tableName, tableName, "title")
-		// query := fmt.Sprintf("SELECT * FROM %s WHERE title LIKE ?", tableName)
-		// TODO find a way where i can get the string of books or any string of the tablename to work here
-		//	 Most likey is not converting the tableName to a string
-		query := "SELECT * FROM books WHERE title LIKE ?"
-		if tableName == "test" {
+	// [1:] is to skip over the first index of the tableName
+	// tableNames: [sqlite_sequence users books movies videoGames]
+	// sqlite_sequence in tableNames is not one of the tables
+	for i, tableName := range tableNames[1:] {
+		// TODO: The title is temp, will need to find a way to seach all fields
+		if !checkTableColumn(db, tableName, "title") {
+			log.Println("Not In Table", tableName)
 			continue
 		}
+
+		// Query for searching the table
+		query := fmt.Sprintf("SELECT * FROM %s WHERE title LIKE ?", tableName)
+
+		// Debugging
+		log.Printf("Number of loops: %d", i)
+		log.Printf("Query Test: %s", query)
+		log.Printf("Len of tableName, %d", len(tableName))
+
 		// making search a wildcard
 		searchWildCard := "%" + search + "%"
 		rows, err := db.Query(query, searchWildCard)
 		if err != nil {
-			log.Printf("IN FOR LOP SEACHING DB TABLES: %s", err)
-			return nil, err
+			// To Till if an error happened
+			log.Printf("IN FOR LOP SEACHING DB TABLES: %d in db %s", err, tableName)
+			// return nil, err
+			continue
+
 		}
 		defer rows.Close()
 
+		// Searching rows in table
 		for rows.Next() {
 			valuePtrs, err := processing(rows)
 			if err != nil {
+				// Tell if an error happened
 				log.Printf("IN SEARCH TABLES rows.Next() processing rows: %s\n", err)
 				return nil, err
 			}
@@ -79,18 +91,20 @@ func SerachTables(db *sql.DB, search string) ([]interface{}, error) {
 			// Value 2 is the page number
 			// Value 3 is the Author
 
-			// converting valuePtrs[1] - title into string for string comparison
+			// converting valuePtrs[1] - title - into string for comparison
 			strValue, ok := (*(valuePtrs[1].(*interface{}))).(string)
 			if !ok {
 				log.Println("Failed to convert valuePtrs[1] to str")
-			} //else {
-			// 	log.Printf("Converted value: %s", strValue)
+			} else {
+				log.Printf("Converted value: %s", strValue)
+			}
 
-			// }
-
+			// comparing the value with the user search input
 			if strValue == search {
+				log.Printf("Found Search: [%d]: %s", i, tableName)
 				return valuePtrs, nil
 			} else {
+				// if not found, sent to log for debugging
 				log.Printf("SEACH VALUE: %s", search)
 				log.Printf("ValuePtrs: %s", valuePtrs[1])
 				for i, ptr := range valuePtrs {
@@ -103,7 +117,41 @@ func SerachTables(db *sql.DB, search string) ([]interface{}, error) {
 	return nil, err
 }
 
+func checkTableColumn(db *sql.DB, tableName, columnName string) bool {
+	// Checking table to see if the table as the columnName in it
+	// If not checked err will close program
+
+	// query to get table
+	query := fmt.Sprintf("PRAGMA table_info(%s)", tableName)
+	rows, err := db.Query(query)
+	if err != nil {
+		log.Printf("Error Getting Table Info: %s, %d", tableName, err)
+		return false
+	}
+	defer rows.Close()
+
+	// Checking all rows for correct row name
+	for rows.Next() {
+		var cid int
+		var name, ctype string
+		var notnull, pk int
+		var dfltValue sql.NullString
+
+		if err := rows.Scan(&cid, &name, &ctype, &notnull, &dfltValue, &pk); err != nil {
+			log.Println("Error scanning table info:", tableName, err)
+			return false
+		}
+
+		// Found correct name
+		if name == columnName {
+			return true
+		}
+	}
+	return false
+}
+
 func processing(row *sql.Rows) ([]interface{}, error) {
+	// Checking rows
 	columns, err := row.Columns()
 	if err != nil {
 		log.Printf("IN PROCESSING Couldn't get columns: %s\n", err)
@@ -129,6 +177,7 @@ func processing(row *sql.Rows) ([]interface{}, error) {
 func fetchTableName(db *sql.DB) ([]string, error) {
 	// Getting the Tables name in the DB
 	// Idea from here:
+	// Along for processing
 	// https://search.brave.com/search?q=how+to+search+through+all+db+tables+in+go+in+sqlite&source=web&summary=1&conversation=209bf105ecdc6630ee6a42
 	var names []string
 	rows, err := db.Query("SELECT name FROM sqlite_master WHERE type='table'")
@@ -151,6 +200,9 @@ func fetchTableName(db *sql.DB) ([]string, error) {
 
 }
 
+/*
+Debugging whats in db in the termial
+*/
 func Query(db *sql.DB) {
 
 	quaryDirectory()
