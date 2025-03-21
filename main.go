@@ -37,7 +37,7 @@ func main() {
 	utils.Query(db)
 
 	tui.App(db)
-
+	log.Println("------------------------------------------------")
 }
 
 func userCommandExe(db *sql.DB) {

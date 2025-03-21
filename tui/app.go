@@ -89,7 +89,7 @@ func App(db *sql.DB) {
 					}
 
 					// log.Printf("In Submit Button: %s\n", searchResult...)
-					// searchInput.SetText("")
+					searchInput.SetText("")
 				}
 			})
 
