@@ -83,11 +83,13 @@ func App(db *sql.DB) {
 
 func updateMain(db *sql.DB, app *tview.Application, searchRequest string, mainTextView *tview.TextView, searchInput *tview.InputField) {
 	go func() {
-		searchResults, err := utils.SearchTables(db, searchRequest)
+		searchResults, tableName, err := utils.SearchTables(db, searchRequest)
 		if err != nil {
 			log.Printf("Couldn't Find: %v", err)
 			return
 		}
+
+		log.Printf("Table Name in App: %s", tableName)
 
 		// Converting results to a strings
 		resultsText := mainPrimitiveResults(searchResults)
@@ -111,7 +113,7 @@ func mainPrimitiveResults(searchResult []interface{}) string {
 			log.Printf("Failed to Convert ValuePtrs[i] to str")
 		} else {
 			log.Printf("Converted Value: %s", prtValue)
-			results = "" + prtValue
+			results += " " + prtValue
 			log.Printf("Results: %s", results)
 		}
 	}
@@ -174,7 +176,9 @@ func addBookMedia(db *sql.DB, pages *tview.Pages) {
 					return
 				}
 
-				utils.AddBookInfo(title, pageNumber, author, db)
+				bookType := "book"
+
+				utils.AddBookInfo(title, pageNumber, author, bookType, db)
 
 			}
 		}).

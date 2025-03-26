@@ -9,7 +9,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func SearchTables(db *sql.DB, search string) ([]interface{}, error) {
+func SearchTables(db *sql.DB, search string) ([]interface{}, string, error) {
 	// TODO: may need to find a way to search outside of title, like page number or author
 
 	tableNames, err := fetchTableName(db)
@@ -84,7 +84,7 @@ func SearchTables(db *sql.DB, search string) ([]interface{}, error) {
 			if err != nil {
 				// Tell if an error happened
 				log.Printf("IN SEARCH TABLES rows.Next() processing rows: %s\n", err)
-				return nil, err
+				return nil, "", err
 			}
 			//TODO: make this less hardcoded
 			// Value 0 is the id number
@@ -103,7 +103,7 @@ func SearchTables(db *sql.DB, search string) ([]interface{}, error) {
 			// comparing the value with the user search input
 			if strValue == search {
 				log.Printf("Found Search: [%d]: %s", i, tableName)
-				return valuePtrs, nil
+				return valuePtrs, tableName, nil
 			} else {
 				// if not found, sent to log for debugging
 				log.Printf("SEACH VALUE: %s", search)
@@ -115,7 +115,7 @@ func SearchTables(db *sql.DB, search string) ([]interface{}, error) {
 		}
 	}
 
-	return nil, err
+	return nil, "", err
 }
 
 func checkTableColumn(db *sql.DB, tableName, columnName string) bool {
@@ -142,7 +142,6 @@ func checkTableColumn(db *sql.DB, tableName, columnName string) bool {
 			log.Println("Error scanning table info:", tableName, err)
 			return false
 		}
-
 		// Found correct name
 		if name == columnName {
 			return true
@@ -200,6 +199,14 @@ func fetchTableName(db *sql.DB) ([]string, error) {
 	return names, nil
 
 }
+
+// func queryAllEntry(db *sql.DB) {
+// 	tableName, err := fetchTableName(db)
+// 	if err != nil {
+// 		log.Printf("In SearchTables: %s\n", err)
+// 	}
+
+// }
 
 /*
 Debugging whats in db in the termial
