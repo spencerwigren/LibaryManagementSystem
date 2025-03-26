@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 
 	"Libarymanagementsystem/utils"
 
@@ -82,6 +83,7 @@ func App(db *sql.DB) {
 }
 
 func updateMain(db *sql.DB, app *tview.Application, searchRequest string, mainTextView *tview.TextView, searchInput *tview.InputField) {
+	// TODO: the display of the search result needs to be better formatted
 	go func() {
 		searchResults, tableName, err := utils.SearchTables(db, searchRequest)
 		if err != nil {
@@ -96,7 +98,21 @@ func updateMain(db *sql.DB, app *tview.Application, searchRequest string, mainTe
 
 		// Updating UI
 		app.QueueUpdateDraw(func() {
-			mainTextView.SetText(resultsText)
+			// Removing the first index of the list
+			// Not need to show
+			resultsWords := strings.Fields(resultsText)
+
+			if len(resultsWords) > 1 {
+				result := strings.Join(resultsWords[1:], " ")
+
+				// Dispalying the new result/title to the mainTextView
+				mainTextView.SetText(result)
+			} else {
+				log.Printf("Couln't Remove first index of: %v", resultsWords)
+			}
+
+			// Dispalying the new result/title to the mainTextView
+			// mainTextView.SetText(resultsText)
 			searchInput.SetText("") // Clears input fields
 		})
 
@@ -108,14 +124,22 @@ func mainPrimitiveResults(searchResult []interface{}) string {
 	for i, prt := range searchResult {
 		log.Printf("ValuePrts[%d]: %v", i, *prt.(*interface{}))
 
-		prtValue, ok := (*(searchResult[i].(*interface{}))).(string)
-		if !ok {
-			log.Printf("Failed to Convert ValuePtrs[i] to str")
-		} else {
-			log.Printf("Converted Value: %s", prtValue)
-			results += " " + prtValue
+		if strValue, ok := (*(searchResult[i].(*interface{}))).(string); ok {
+			log.Printf("Converted Value: %s", strValue)
+			results += " " + strValue
+
 			log.Printf("Results: %s", results)
+		} else if intValue, ok := (*(searchResult[i].((*interface{})))).(int64); ok {
+			log.Printf("Converte Value: %d", intValue)
+			intVal := int(intValue)
+			// converting and setting to results
+			results += " " + strconv.Itoa(intVal)
+			log.Printf("Results: %s", results)
+
+		} else {
+			log.Printf("Failed to Convert to string")
 		}
+
 	}
 
 	return results
