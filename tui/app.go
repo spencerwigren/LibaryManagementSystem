@@ -30,8 +30,8 @@ func App(db *sql.DB) {
 
 	// Layout of TUI
 	grid := tview.NewGrid().
-		SetRows(3, 0, 3).
-		SetColumns(30, 0, 30).
+		SetRows(3, 0, 3).      // Setting rows height three rows
+		SetColumns(35, 0, 35). // Setting columns with three columns
 		SetBorders(true).
 		AddItem(newPrimitive("Header"), 0, 0, 1, 3, 0, 0, false).
 		AddItem(newPrimitive(footerFormate), 2, 0, 1, 3, 0, 0, false)
@@ -91,7 +91,6 @@ func App(db *sql.DB) {
 }
 
 func updateMain(db *sql.DB, app *tview.Application, searchRequest string, mainTextView *tview.TextView, searchInput *tview.InputField) {
-	// TODO: the display of the search result needs to be better formatted
 	go func() {
 		searchResults, tableName, err := utils.SearchTables(db, searchRequest)
 		if err != nil {
@@ -107,7 +106,6 @@ func updateMain(db *sql.DB, app *tview.Application, searchRequest string, mainTe
 		// Updating UI
 		app.QueueUpdateDraw(func() {
 			if len(resultsText) > 1 && tableName == "books" {
-				// result := strings.Join(resultsWords[1:], " ")
 				// TODO: FIX this so it can take in all the
 				// Also it would be good to put this in a dictonary is possible to output instead of a list.
 				resultOutput := fmt.Sprintf("Search Results\nTitle: %s\nPageNumber: %s\nAuthor: %s\n", resultsText[1], resultsText[2], resultsText[3])
@@ -128,7 +126,6 @@ func updateMain(db *sql.DB, app *tview.Application, searchRequest string, mainTe
 }
 
 func mainPrimitiveResults(searchResult []interface{}) []string {
-	// var results string
 	var results []string
 
 	for i, prt := range searchResult {
@@ -143,8 +140,8 @@ func mainPrimitiveResults(searchResult []interface{}) []string {
 		} else if intValue, ok := (*(searchResult[i].((*interface{})))).(int64); ok {
 			log.Printf("Converte Value: %d", intValue)
 			intVal := int(intValue)
-			// converting and setting to results
-			// results += " " + strconv.Itoa(intVal)
+
+			// converting and setting to results)
 			results = append(results, strconv.Itoa(intVal))
 			log.Printf("Results: %s", results)
 
@@ -198,8 +195,7 @@ func mediaModal(pages *tview.Pages) {
 }
 
 func addBookMedia(db *sql.DB, pages *tview.Pages) {
-	// TODO: have the input fields return user input and input the data into the db
-
+	// Setting tview input fields
 	titleInput := tview.NewInputField().SetLabel("Input Title: ")
 	pageNumInput := tview.NewInputField().SetLabel("Input Page Number: ")
 	authorInput := tview.NewInputField().SetLabel("Input Author Name: ")
@@ -250,23 +246,18 @@ func addBookMedia(db *sql.DB, pages *tview.Pages) {
 //-----Do Note that the following function are patterened after addBookMedia()-----//
 
 func addMovieMedia(db *sql.DB, pages *tview.Pages) {
-	// TODO: have the input fields return user input and input the data into the db
-
 	titleInput := tview.NewInputField().SetLabel("Input Title Name: ")
 
 	addMovieForm := tview.NewForm().
 		AddFormItem(titleInput).
 		AddButton("Submit", func() {
 			title := titleInput.GetText()
-			//TODO have input fields input into db
-			if title != "" {
-				// fmt.Println("Item Submited")
-				utils.AddMovieInfo(title, db)
 
+			if title != "" {
+				utils.AddMovieInfo(title, db)
 			}
 		}).
 		AddButton("Back", func() {
-			// app.SetRoot(grid, true)
 			pages.SwitchToPage("mediaModal")
 		})
 
@@ -280,8 +271,6 @@ func addMovieMedia(db *sql.DB, pages *tview.Pages) {
 }
 
 func addVidoGameMedia(db *sql.DB, pages *tview.Pages) {
-	// TODO: have the input fields return user input and input the data into the db
-
 	titleInput := tview.NewInputField().SetLabel("Input Video Game Title: ")
 
 	addGameForm := tview.NewForm().
@@ -289,14 +278,11 @@ func addVidoGameMedia(db *sql.DB, pages *tview.Pages) {
 		AddButton("Submit", func() {
 			title := titleInput.GetText()
 
-			//TODO have input fields input into db
 			if title != "" {
-				// fmt.Println("Item Submited")
 				utils.AddVideoGameInfo(title, db)
 			}
 		}).
 		AddButton("Back", func() {
-			// app.SetRoot(grid, true)
 			pages.SwitchToPage("mediaModal")
 		})
 
@@ -310,8 +296,6 @@ func addVidoGameMedia(db *sql.DB, pages *tview.Pages) {
 }
 
 func addUser(db *sql.DB, pages *tview.Pages) {
-	// TODO: have the input fields return user input and input the data into the db
-
 	userNameInput := tview.NewInputField().SetLabel("Input User Name")
 
 	addUserForm := tview.NewForm().
@@ -319,14 +303,11 @@ func addUser(db *sql.DB, pages *tview.Pages) {
 		AddButton("Submit", func() {
 			user := userNameInput.GetText()
 
-			//TODO have input fields input into db
 			if user != "" {
-				// fmt.Println("Item Submited")
 				utils.AddUserInfo(user, db)
 			}
 		}).
 		AddButton("Back", func() {
-			// app.SetRoot(grid, true)
 			pages.SwitchToPage("mediaModal")
 		})
 
@@ -339,3 +320,5 @@ func addUser(db *sql.DB, pages *tview.Pages) {
 	pages.AddPage("addUser", addUserFlex, true, false)
 
 }
+
+//---------------------------------------------------------------------------------//
