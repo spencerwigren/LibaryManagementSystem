@@ -17,36 +17,8 @@ func SearchTables(db *sql.DB, search string) ([]interface{}, string, error) {
 		log.Printf("In SearchTables: %s\n", err)
 	}
 
-	/*
-		Debugging Tables
-		temp, err := db.Query("PRAGMA table_info(books);")
-		if err != nil {
-			return nil, err
-		}
-		defer temp.Close()
-
-		log.Println("Table Structure:")
-		for temp.Next() {
-			var cid int
-			var name string
-			var ctype string
-			var notnull int
-			var dflt_value sql.NullString
-			var pk int
-
-			err := temp.Scan(&cid, &name, &ctype, &notnull, &dflt_value, &pk)
-			if err != nil {
-				return nil, err
-			}
-
-			log.Printf("Column ID: %d, Name: %s, Type: %s, Not Null: %d, Default: %v, Primary Key: %d\n",
-				cid, name, ctype, notnull, dflt_value.String, pk)
-		}
-
-		if err = temp.Err(); err != nil {
-			return nil, err
-		}
-	*/
+	// none, err := debuggingTable(db)
+	// log.Printf("debuggingTable Output: %v, %v", none, err)
 
 	// [1:] is to skip over the first index of the tableName
 	// tableNames: [sqlite_sequence users books movies videoGames]
@@ -120,7 +92,6 @@ func SearchTables(db *sql.DB, search string) ([]interface{}, string, error) {
 
 func checkTableColumn(db *sql.DB, tableName, columnName string) bool {
 	// Checking table to see if the table as the columnName in it
-	// If not checked err will close program
 
 	// query to get table
 	query := fmt.Sprintf("PRAGMA table_info(%s)", tableName)
@@ -187,12 +158,14 @@ func fetchTableName(db *sql.DB) ([]string, error) {
 	}
 	defer rows.Close()
 
+	// going through the tables names
 	for rows.Next() {
 		var name string
 		if err := rows.Scan(&name); err != nil {
 			log.Printf("Cannot Fetch Table Name: %s\n", err)
 			return nil, err
 		}
+		// Saving to list
 		names = append(names, name)
 	}
 
@@ -200,13 +173,72 @@ func fetchTableName(db *sql.DB) ([]string, error) {
 
 }
 
-// func queryAllEntry(db *sql.DB) {
-// 	tableName, err := fetchTableName(db)
-// 	if err != nil {
-// 		log.Printf("In SearchTables: %s\n", err)
-// 	}
+func QueryAllEntry(db *sql.DB) []any {
+	tableNames, err := fetchTableName(db)
+	if err != nil {
+		log.Printf("In SearchTables: %s\n", err)
+	}
 
-// }
+	var rowsEntries []any
+
+	for i, tableName := range tableNames[1:] {
+		query := fmt.Sprintf("SELECT * FROM %s", tableName)
+
+		rows, err := db.Query(query)
+		if err != nil {
+			log.Printf("CAN NOT QUERY DB TABLE: %s", tableName)
+			continue
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			valuePtrs, err := processing(rows)
+			if err != nil {
+				log.Printf("IN queryAllEntry rows.Next() processing rows: %s\n", err)
+				return nil
+			}
+			log.Printf("TABLE ROW ENTRIES[%d]: %s", i, valuePtrs)
+			rowsEntries = append(rowsEntries, valuePtrs)
+
+		}
+
+	}
+
+	return rowsEntries
+}
+
+func debuggingTable(db *sql.DB) (any, error) {
+
+	temp, err := db.Query("PRAGMA table_info(books);")
+	if err != nil {
+		return nil, err
+	}
+	defer temp.Close()
+
+	log.Println("Table Structure:")
+	for temp.Next() {
+		var cid int
+		var name string
+		var ctype string
+		var notnull int
+		var dflt_value sql.NullString
+		var pk int
+
+		err := temp.Scan(&cid, &name, &ctype, &notnull, &dflt_value, &pk)
+		if err != nil {
+			return nil, err
+		}
+
+		log.Printf("Column ID: %d, Name: %s, Type: %s, Not Null: %d, Default: %v, Primary Key: %d\n",
+			cid, name, ctype, notnull, dflt_value.String, pk)
+	}
+
+	if err = temp.Err(); err != nil {
+		return nil, err
+	}
+
+	return nil, err
+}
 
 /*
 Debugging whats in db in the termial
@@ -218,7 +250,7 @@ func Query(db *sql.DB) {
 
 }
 
-func queryBooks(db *sql.DB) {
+func queryBooksTerminal(db *sql.DB) {
 	// This will get all books
 	// TODO: have user pick which books when GUI is build
 
@@ -245,7 +277,7 @@ func queryBooks(db *sql.DB) {
 
 }
 
-func queryMovies(db *sql.DB) {
+func queryMoviesTerminal(db *sql.DB) {
 	// This will get all Movies
 	// TODO: have user pick which movie when GUI is build
 	movieRows, err := db.Query("SELECT movieId, title FROM movies")
@@ -270,7 +302,7 @@ func queryMovies(db *sql.DB) {
 
 }
 
-func queryGames(db *sql.DB) {
+func queryGamesTerminal(db *sql.DB) {
 	// This will get all Video Games
 	// TODO: have user pick which Video Games when GUI is build
 	videoGameRows, err := db.Query("SELECT videoGameId, title FROM videoGames")
@@ -290,7 +322,7 @@ func queryGames(db *sql.DB) {
 
 }
 
-func queryUser(db *sql.DB) {
+func queryUserTerminal(db *sql.DB) {
 	// This will get all Users
 	// TODO: have user pick which Users when GUI is build
 	userRows, err := db.Query("SELECT id, name FROM users;")
@@ -315,10 +347,10 @@ func queryUser(db *sql.DB) {
 
 func queryAll(db *sql.DB) {
 	// This will get all Info
-	queryBooks(db)
-	queryMovies(db)
-	queryGames(db)
-	queryUser(db)
+	queryBooksTerminal(db)
+	queryMoviesTerminal(db)
+	queryGamesTerminal(db)
+	queryUserTerminal(db)
 }
 
 // This is temp for termial use only along with userQueryCommandInput
@@ -328,13 +360,13 @@ func userQueryCommandExe(db *sql.DB) {
 	if check {
 		switch userCommand {
 		case 1:
-			queryBooks(db)
+			queryBooksTerminal(db)
 		case 2:
-			queryMovies(db)
+			queryMoviesTerminal(db)
 		case 3:
-			queryGames(db)
+			queryGamesTerminal(db)
 		case 4:
-			queryUser(db)
+			queryUserTerminal(db)
 		case 5:
 			queryAll(db)
 		}
