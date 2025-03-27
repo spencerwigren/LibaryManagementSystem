@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"strings"
 
 	"Libarymanagementsystem/utils"
 
@@ -107,20 +106,19 @@ func updateMain(db *sql.DB, app *tview.Application, searchRequest string, mainTe
 
 		// Updating UI
 		app.QueueUpdateDraw(func() {
-			// Removing the first index of the list
-			// Not need to show
-			resultsWords := strings.Fields(resultsText)
-
-			if len(resultsWords) > 1 {
+			if len(resultsText) > 1 && tableName == "books" {
 				// result := strings.Join(resultsWords[1:], " ")
 				// TODO: FIX this so it can take in all the
 				// Also it would be good to put this in a dictonary is possible to output instead of a list.
-				resultOutput := fmt.Sprintf("Search Results\nTitle: %s\nPageNumber: %s\nAuthor: %s\n", resultsWords[1], resultsWords[2], resultsWords[3])
+				resultOutput := fmt.Sprintf("Search Results\nTitle: %s\nPageNumber: %s\nAuthor: %s\n", resultsText[1], resultsText[2], resultsText[3])
 
 				// Dispalying the new result/title to the mainTextView
 				mainTextView.SetText(resultOutput)
+			} else if len(resultsText) > 1 { // Movies and VideGames have same fields
+				resultOutput := fmt.Sprintf("Search Results\nTitle: %s\n", resultsText[1])
+				mainTextView.SetText(resultOutput)
 			} else {
-				log.Printf("Couln't Remove first index of: %v", resultsWords)
+				log.Printf("Couln't Remove first index of: %v", resultsText)
 			}
 
 			searchInput.SetText("") // Clears input fields
@@ -129,21 +127,25 @@ func updateMain(db *sql.DB, app *tview.Application, searchRequest string, mainTe
 	}()
 }
 
-func mainPrimitiveResults(searchResult []interface{}) string {
-	var results string
+func mainPrimitiveResults(searchResult []interface{}) []string {
+	// var results string
+	var results []string
+
 	for i, prt := range searchResult {
 		log.Printf("ValuePrts[%d]: %v", i, *prt.(*interface{}))
 
 		if strValue, ok := (*(searchResult[i].(*interface{}))).(string); ok {
 			log.Printf("Converted Value: %s", strValue)
-			results += " " + strValue
-
+			// results += " " + strValue
+			results = append(results, strValue)
 			log.Printf("Results: %s", results)
+
 		} else if intValue, ok := (*(searchResult[i].((*interface{})))).(int64); ok {
 			log.Printf("Converte Value: %d", intValue)
 			intVal := int(intValue)
 			// converting and setting to results
-			results += " " + strconv.Itoa(intVal)
+			// results += " " + strconv.Itoa(intVal)
+			results = append(results, strconv.Itoa(intVal))
 			log.Printf("Results: %s", results)
 
 		} else {
