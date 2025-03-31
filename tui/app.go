@@ -221,9 +221,7 @@ func addBookMedia(db *sql.DB, pages *tview.Pages) {
 					return
 				}
 
-				bookType := "book"
-
-				utils.AddBookInfo(title, pageNumber, author, bookType, db)
+				utils.AddBookInfo(title, pageNumber, author, db)
 
 			}
 		}).

@@ -255,7 +255,9 @@ func queryBooksTerminal(db *sql.DB) {
 	// TODO: have user pick which books when GUI is build
 
 	bookRows, err := db.Query("SELECT bookId, title, pageNumber, author FROM books;")
-	checkError(err)
+	if err != nil {
+		log.Fatal(err)
+	}
 	defer bookRows.Close()
 
 	fmt.Println("\nBooks:")
@@ -266,7 +268,9 @@ func queryBooksTerminal(db *sql.DB) {
 		var author string
 
 		err = bookRows.Scan(&bookId, &title, &pageNumber, &author)
-		checkError(err)
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		fmt.Printf("Book ID: %d, Title: %s, Page Number: %d, Author: %s\n", bookId, title, pageNumber, author)
 	}
@@ -281,7 +285,9 @@ func queryMoviesTerminal(db *sql.DB) {
 	// This will get all Movies
 	// TODO: have user pick which movie when GUI is build
 	movieRows, err := db.Query("SELECT movieId, title FROM movies")
-	checkError(err)
+	if err != nil {
+		log.Fatal(err)
+	}
 	defer movieRows.Close()
 
 	fmt.Println("\nMovies:")
@@ -290,7 +296,9 @@ func queryMoviesTerminal(db *sql.DB) {
 		var title string
 
 		err = movieRows.Scan(&movieId, &title)
-		checkError(err)
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		fmt.Printf("Movie ID: %d, Title: %s\n", movieId, title)
 
@@ -306,7 +314,9 @@ func queryGamesTerminal(db *sql.DB) {
 	// This will get all Video Games
 	// TODO: have user pick which Video Games when GUI is build
 	videoGameRows, err := db.Query("SELECT videoGameId, title FROM videoGames")
-	checkError(err)
+	if err != nil {
+		log.Fatal(err)
+	}
 	defer videoGameRows.Close()
 
 	fmt.Println("\nVideo Games:")
@@ -315,7 +325,9 @@ func queryGamesTerminal(db *sql.DB) {
 		var title string
 
 		err = videoGameRows.Scan(&videoGameId, &title)
-		checkError(err)
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		fmt.Printf("Video Games ID: %d, Title: %s\n", videoGameId, title)
 	}
@@ -326,7 +338,9 @@ func queryUserTerminal(db *sql.DB) {
 	// This will get all Users
 	// TODO: have user pick which Users when GUI is build
 	userRows, err := db.Query("SELECT id, name FROM users;")
-	checkError(err)
+	if err != nil {
+		log.Fatal(err)
+	}
 	defer userRows.Close()
 
 	fmt.Println("\nUsers:")
@@ -335,7 +349,9 @@ func queryUserTerminal(db *sql.DB) {
 		var name string
 
 		err = userRows.Scan(&id, &name)
-		checkError(err)
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		fmt.Printf("ID: %d, Name: %s\n", id, name)
 	}
