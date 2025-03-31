@@ -18,8 +18,6 @@ func AddBookInfo(title string, pageNumber int, author string, db *sql.DB) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	println("Success")
-
 }
 
 func AddMovieInfo(movieTitle string, db *sql.DB) {
