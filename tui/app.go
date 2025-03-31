@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"time"
 
 	"Libarymanagementsystem/utils"
 
@@ -106,14 +107,11 @@ func updateMain(db *sql.DB, app *tview.Application, searchRequest string, mainTe
 		// Updating UI
 		app.QueueUpdateDraw(func() {
 			if len(resultsText) > 1 && tableName == "books" {
-				// TODO: FIX this so it can take in all the
-				// Also it would be good to put this in a dictonary is possible to output instead of a list.
-				resultOutput := fmt.Sprintf("Search Results\nTitle: %s\nPageNumber: %s\nAuthor: %s\n", resultsText[1], resultsText[2], resultsText[3])
-
+				resultOutput := fmt.Sprintf("Search Results\nTitle: %s\nPageNumber: %s\nAuthor: %s\nDateTime: %s", resultsText[1], resultsText[2], resultsText[3], resultsText[4])
 				// Dispalying the new result/title to the mainTextView
 				mainTextView.SetText(resultOutput)
 			} else if len(resultsText) > 1 { // Movies and VideGames have same fields
-				resultOutput := fmt.Sprintf("Search Results\nTitle: %s\n", resultsText[1])
+				resultOutput := fmt.Sprintf("Search Results\nTitle: %s\nDateTime: %s", resultsText[1], resultsText[2])
 				mainTextView.SetText(resultOutput)
 			} else {
 				log.Printf("Couln't Remove first index of: %v", resultsText)
@@ -130,6 +128,7 @@ func mainPrimitiveResults(searchResult []interface{}) []string {
 
 	for i, prt := range searchResult {
 		log.Printf("ValuePrts[%d]: %v", i, *prt.(*interface{}))
+		// searchPrt := searchResult[i]
 
 		if strValue, ok := (*(searchResult[i].(*interface{}))).(string); ok {
 			log.Printf("Converted Value: %s", strValue)
@@ -138,12 +137,18 @@ func mainPrimitiveResults(searchResult []interface{}) []string {
 			log.Printf("Results: %s", results)
 
 		} else if intValue, ok := (*(searchResult[i].((*interface{})))).(int64); ok {
-			log.Printf("Converte Value: %d", intValue)
+			log.Printf("Converted Value: %d", intValue)
 			intVal := int(intValue)
 
 			// converting and setting to results)
 			results = append(results, strconv.Itoa(intVal))
 			log.Printf("Results: %s", results)
+
+		} else if dateValue, ok := (*(searchResult[i].((*interface{})))).(time.Time); ok {
+			log.Printf("Converted Value : %v", dateValue)
+			convertedTime := dateValue.Format(time.UnixDate)
+
+			results = append(results, convertedTime)
 
 		} else {
 			log.Printf("Failed to Convert to string")
