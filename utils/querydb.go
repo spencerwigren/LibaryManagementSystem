@@ -114,6 +114,7 @@ func checkTableColumn(db *sql.DB, tableName, columnName string) bool {
 			return false
 		}
 		// Found correct name
+		// Name here is the column title
 		if name == columnName {
 			return true
 		}

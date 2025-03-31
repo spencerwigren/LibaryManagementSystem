@@ -19,30 +19,34 @@ func InitDatabase() {
 	defer db.Close()
 
 	// drop tables
-	// dropTables(db, err)
+	dropTables(db, err)
 
 	// Create the table
 	createTableSQL := `
 	CREATE TABLE IF NOT EXISTS users (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		name TEXT NOT NULL
+		name TEXT NOT NULL,
+		time DATETIME NOT NULL
 	);
 
 	CREATE TABLE IF NOT EXISTS books (
 		bookId INTEGER PRIMARY KEY AUTOINCREMENT,
 		title TEXT NOT NULL,
 		pageNumber INTEGER NOT NULL,
-		author TEXT NOT NULL
+		author TEXT NOT NULL,
+		time DATETIME NOT NULL
 	);
 
 	CREATE TABLE IF NOT EXISTS movies(
 		movieId INTEGER PRIMARY KEY AUTOINCREMENT, 
-		title TEXT NOT NULL
+		title TEXT NOT NULL,
+		time DATETIME NOT NULL
 	);
 
 	CREATE TABLE IF NOT EXISTS videoGames (
 		videoGameId INTEGER PRIMARY KEY AUTOINCREMENT,
-		title TEXT NOT NULL
+		title TEXT NOT NULL,
+		time DATETIME NOT NULL
 	)`
 
 	// Creating the db tables
