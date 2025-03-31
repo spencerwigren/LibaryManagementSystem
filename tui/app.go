@@ -37,13 +37,6 @@ func App(db *sql.DB) {
 		AddItem(newPrimitive("Header"), 0, 0, 1, 3, 0, 0, false).
 		AddItem(newPrimitive(footerFormate), 2, 0, 1, 3, 0, 0, false)
 
-	// Setting Views for each media input
-	addBookMedia(db, pages)
-	addMovieMedia(db, pages)
-	addVidoGameMedia(db, pages)
-	addUser(db, pages)
-	mediaModal(pages)
-
 	// Main menu prmitive to interact with TUI
 	searchInput := tview.NewInputField().SetLabel("Search: ")
 
@@ -74,9 +67,31 @@ func App(db *sql.DB) {
 			app.Stop()
 		})
 
+	// Setting Output for SideBar
+	sideBarTextView := tview.NewTextView().
+		SetTextAlign(tview.AlignCenter).
+		SetWordWrap(true).
+		SetText("Newest Content")
+
+	// Creating SideBar
+	sideBar := tview.NewForm().
+		AddFormItem(sideBarTextView)
+
+	// This will get the title to show even if the text is there
+	// sideBar.SetBorder(true).SetTitle("Newest Content").SetTitleAlign(tview.AlignCenter)
+
+	sideBar.SetTitle("Newest Content")
+
 	// Setting the layout in grid
-	sideBar := newPrimitive("Side bar")
+	// sideBar := newPrimitive("Side bar")
 	main := mainTextView
+
+	// Setting Views for each media input
+	addBookMedia(db, pages, sideBarTextView)
+	addMovieMedia(db, pages, sideBarTextView)
+	addVidoGameMedia(db, pages, sideBarTextView)
+	addUser(db, pages)
+	mediaModal(pages)
 
 	// adding menu, main, and sidebar to grid to draw.
 	grid.AddItem(menu, 1, 0, 1, 1, 0, 100, true).
@@ -107,7 +122,7 @@ func updateMain(db *sql.DB, app *tview.Application, searchRequest string, mainTe
 		// Updating UI
 		app.QueueUpdateDraw(func() {
 			if len(resultsText) > 1 && tableName == "books" {
-				resultOutput := fmt.Sprintf("Search Results\nTitle: %s\nPageNumber: %s\nAuthor: %s\nDateTime: %s", resultsText[1], resultsText[2], resultsText[3], resultsText[4])
+				resultOutput := fmt.Sprintf("Search Results\nTitle: %s\nPage Number: %s\nAuthor: %s\nDateTime: %s", resultsText[1], resultsText[2], resultsText[3], resultsText[4])
 				// Dispalying the new result/title to the mainTextView
 				mainTextView.SetText(resultOutput)
 			} else if len(resultsText) > 1 { // Movies and VideGames have same fields
@@ -199,7 +214,7 @@ func mediaModal(pages *tview.Pages) {
 	pages.AddPage("mediaModal", addMediaModal, true, false)
 }
 
-func addBookMedia(db *sql.DB, pages *tview.Pages) {
+func addBookMedia(db *sql.DB, pages *tview.Pages, sideBarTextView *tview.TextView) {
 	// Setting tview input fields
 	titleInput := tview.NewInputField().SetLabel("Input Title: ")
 	pageNumInput := tview.NewInputField().SetLabel("Input Page Number: ")
@@ -226,7 +241,18 @@ func addBookMedia(db *sql.DB, pages *tview.Pages) {
 					return
 				}
 
+				// Setting info into db
 				utils.AddBookInfo(title, pageNumber, author, db)
+
+				// Clearning the text fields
+				titleInput.SetText("")
+				pageNumInput.SetText("")
+				authorInput.SetText("")
+
+				// TODO IDEA: make this a list of the 5 most recent entries in the db
+				// May need to make this it's own function at some point to draw all of them
+				sideBarTextUpdate := fmt.Sprintf("Newest Content\nTitle: %s\n", title)
+				sideBarTextView.SetText(sideBarTextUpdate)
 
 			}
 		}).
@@ -246,9 +272,9 @@ func addBookMedia(db *sql.DB, pages *tview.Pages) {
 	pages.AddPage("addBook", addBookFlex, true, false)
 }
 
-//-----Do Note that the following function are patterened after addBookMedia()-----//
+//-----Note that the following function are patterened after addBookMedia()-----//
 
-func addMovieMedia(db *sql.DB, pages *tview.Pages) {
+func addMovieMedia(db *sql.DB, pages *tview.Pages, sideBarTextView *tview.TextView) {
 	titleInput := tview.NewInputField().SetLabel("Input Title Name: ")
 
 	addMovieForm := tview.NewForm().
@@ -258,6 +284,12 @@ func addMovieMedia(db *sql.DB, pages *tview.Pages) {
 
 			if title != "" {
 				utils.AddMovieInfo(title, db)
+
+				titleInput.SetText("")
+
+				sideBarTextUpdate := fmt.Sprintf("Newest Content\nTitle: %s\n", title)
+				sideBarTextView.SetText(sideBarTextUpdate)
+
 			}
 		}).
 		AddButton("Back", func() {
@@ -273,7 +305,7 @@ func addMovieMedia(db *sql.DB, pages *tview.Pages) {
 	pages.AddPage("addMovie", addBookFlex, true, false)
 }
 
-func addVidoGameMedia(db *sql.DB, pages *tview.Pages) {
+func addVidoGameMedia(db *sql.DB, pages *tview.Pages, sideBarTextView *tview.TextView) {
 	titleInput := tview.NewInputField().SetLabel("Input Video Game Title: ")
 
 	addGameForm := tview.NewForm().
@@ -283,6 +315,11 @@ func addVidoGameMedia(db *sql.DB, pages *tview.Pages) {
 
 			if title != "" {
 				utils.AddVideoGameInfo(title, db)
+
+				titleInput.SetText("")
+
+				sideBarTextUpdate := fmt.Sprintf("Newest Content\nTitle: %s\n", title)
+				sideBarTextView.SetText(sideBarTextUpdate)
 			}
 		}).
 		AddButton("Back", func() {
@@ -308,6 +345,8 @@ func addUser(db *sql.DB, pages *tview.Pages) {
 
 			if user != "" {
 				utils.AddUserInfo(user, db)
+
+				userNameInput.SetText("")
 			}
 		}).
 		AddButton("Back", func() {
