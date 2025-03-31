@@ -21,7 +21,7 @@ func SearchTables(db *sql.DB, search string) ([]interface{}, string, error) {
 	// log.Printf("debuggingTable Output: %v, %v", none, err)
 
 	// [1:] is to skip over the first index of the tableName
-	// tableNames: [sqlite_sequence users books movies videoGames]
+	// tableNames: [sqlite_sequence, users, books, movies, videoGames]
 	// sqlite_sequence in tableNames is not one of the tables
 	for i, tableName := range tableNames[1:] {
 		// TODO: The title is temp, will need to find a way to seach all fields
@@ -251,9 +251,7 @@ func Query(db *sql.DB) {
 }
 
 func queryBooksTerminal(db *sql.DB) {
-	// This will get all books
-	// TODO: have user pick which books when GUI is build
-
+	// This will get all bookss
 	bookRows, err := db.Query("SELECT bookId, title, pageNumber, author FROM books;")
 	if err != nil {
 		log.Fatal(err)
@@ -283,7 +281,6 @@ func queryBooksTerminal(db *sql.DB) {
 
 func queryMoviesTerminal(db *sql.DB) {
 	// This will get all Movies
-	// TODO: have user pick which movie when GUI is build
 	movieRows, err := db.Query("SELECT movieId, title FROM movies")
 	if err != nil {
 		log.Fatal(err)
@@ -312,7 +309,6 @@ func queryMoviesTerminal(db *sql.DB) {
 
 func queryGamesTerminal(db *sql.DB) {
 	// This will get all Video Games
-	// TODO: have user pick which Video Games when GUI is build
 	videoGameRows, err := db.Query("SELECT videoGameId, title FROM videoGames")
 	if err != nil {
 		log.Fatal(err)
@@ -336,7 +332,6 @@ func queryGamesTerminal(db *sql.DB) {
 
 func queryUserTerminal(db *sql.DB) {
 	// This will get all Users
-	// TODO: have user pick which Users when GUI is build
 	userRows, err := db.Query("SELECT id, name FROM users;")
 	if err != nil {
 		log.Fatal(err)
@@ -393,7 +388,7 @@ func userQueryCommandExe(db *sql.DB) {
 
 func userQueryCommandInput() (bool, int64) {
 	// This is for the commandline part
-	// REMOVE AFTER GUI is built
+	// REMOVE AFTER TUI is built
 	var command string
 	commandList := [5]int64{1, 2, 3, 4, 5}
 	fmt.Print("> ")

@@ -13,9 +13,6 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// getting demo writen
-// the terminal is going ot act as the UI for now
-
 func main() {
 	utils.InitDatabase()
 
@@ -27,18 +24,19 @@ func main() {
 	log.SetFlags(log.Lshortfile)
 	log.SetOutput(file)
 
+	// Setting up the db
 	db, err := sql.Open("sqlite3", "projectdb.db")
-	// TODO if only one check error in main remove function and check it here.
-	// checkError(err)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
 
+	// Used for debugging db
 	directory()
 	userCommandExe(db)
 	utils.Query(db)
 
+	// Starting App
 	tui.App(db)
 	log.Println("------------------------------------------------")
 }

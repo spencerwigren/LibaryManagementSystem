@@ -18,10 +18,10 @@ func InitDatabase() {
 	}
 	defer db.Close()
 
-	// drop table
+	// drop tables
 	// dropTables(db, err)
 
-	// Create a table
+	// Create the table
 	createTableSQL := `
 	CREATE TABLE IF NOT EXISTS users (
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -45,6 +45,7 @@ func InitDatabase() {
 		title TEXT NOT NULL
 	)`
 
+	// Creating the db tables
 	_, err = db.Exec(createTableSQL)
 	if err != nil {
 		log.Fatal(err)
@@ -54,7 +55,6 @@ func InitDatabase() {
 }
 
 func dropTables(db *sql.DB, err error) {
-	// checkError(err)
 	if err != nil {
 		log.Fatal(err)
 	}
