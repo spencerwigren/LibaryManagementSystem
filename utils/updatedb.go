@@ -20,20 +20,20 @@ func AddBookInfo(title string, pageNumber int, author string, db *sql.DB) {
 	}
 }
 
-func AddMovieInfo(movieTitle string, db *sql.DB) {
+func AddMovieInfo(db *sql.DB, title string, rating string, year int) {
 
-	insertSQL := `INSERT INTO movies (title, time) VALUES (?, ?)`
-	_, err := db.Exec(insertSQL, movieTitle, time.Now())
+	insertSQL := `INSERT INTO movies (title, rating, releaseYear, time) VALUES (?, ?, ?, ?)`
+	_, err := db.Exec(insertSQL, title, rating, year, time.Now())
 	if err != nil {
 		log.Fatal(err)
 	}
 
 }
 
-func AddVideoGameInfo(gameTitle string, db *sql.DB) {
+func AddVideoGameInfo(db *sql.DB, gameTitle string, rating string, year int) {
 
-	insertSQL := `INSERT INTO videoGames (title, time) values (?, ?)`
-	_, err := db.Exec(insertSQL, gameTitle, time.Now())
+	insertSQL := `INSERT INTO videoGames (title, rating, releaseYear, time) values (?, ?, ?, ?)`
+	_, err := db.Exec(insertSQL, gameTitle, rating, year, time.Now())
 	if err != nil {
 		log.Fatal(err)
 	}
