@@ -125,9 +125,16 @@ func updateMain(db *sql.DB, app *tview.Application, searchRequest string, mainTe
 				resultOutput := fmt.Sprintf("Search Results\nTitle: %s\nPage Number: %s\nAuthor: %s\nDateTime: %s", resultsText[1], resultsText[2], resultsText[3], resultsText[4])
 				// Dispalying the new result/title to the mainTextView
 				mainTextView.SetText(resultOutput)
+
+			} else if len(resultsText) > 1 && (tableName == "movies" || tableName == "videoGames") {
+				resultOutput := fmt.Sprintf("Search Results\nTitle: %s\nRating: %s\nRelease Year: %s\nDateTime: %s", resultsText[1], resultsText[2], resultsText[3], resultsText[4])
+				mainTextView.SetText(resultOutput)
+
+				// This may be redundent, or not???
 			} else if len(resultsText) > 1 { // Movies and VideGames have same fields
 				resultOutput := fmt.Sprintf("Search Results\nTitle: %s\nDateTime: %s", resultsText[1], resultsText[2])
 				mainTextView.SetText(resultOutput)
+
 			} else {
 				log.Printf("Couln't Remove first index of: %v", resultsText)
 			}
@@ -226,6 +233,7 @@ func addBookMedia(db *sql.DB, pages *tview.Pages, sideBarTextView *tview.TextVie
 		AddFormItem(pageNumInput).
 		AddFormItem(authorInput).
 		AddButton("Submit", func() {
+			// Getting user text
 			title := titleInput.GetText()
 			pageNum := pageNumInput.GetText()
 			author := authorInput.GetText()
@@ -276,16 +284,29 @@ func addBookMedia(db *sql.DB, pages *tview.Pages, sideBarTextView *tview.TextVie
 
 func addMovieMedia(db *sql.DB, pages *tview.Pages, sideBarTextView *tview.TextView) {
 	titleInput := tview.NewInputField().SetLabel("Input Title Name: ")
+	ratingInput := tview.NewInputField().SetLabel("Input Rating: ")
+	releaseYearInput := tview.NewInputField().SetLabel("Input Release Year: ")
 
 	addMovieForm := tview.NewForm().
 		AddFormItem(titleInput).
+		AddFormItem(ratingInput).
+		AddFormItem(releaseYearInput).
 		AddButton("Submit", func() {
 			title := titleInput.GetText()
+			rating := ratingInput.GetText()
+			year := releaseYearInput.GetText()
 
-			if title != "" {
-				utils.AddMovieInfo(title, db)
+			if title != "" && rating != "" && year != "" {
+
+				yearConverted, err := strconv.Atoi(year)
+				if err != nil {
+					log.Println("ERROR:", err)
+				}
+				utils.AddMovieInfo(db, title, rating, yearConverted)
 
 				titleInput.SetText("")
+				ratingInput.SetText("")
+				releaseYearInput.SetText("")
 
 				sideBarTextUpdate := fmt.Sprintf("Newest Content\nTitle: %s\n", title)
 				sideBarTextView.SetText(sideBarTextUpdate)
@@ -307,16 +328,30 @@ func addMovieMedia(db *sql.DB, pages *tview.Pages, sideBarTextView *tview.TextVi
 
 func addVidoGameMedia(db *sql.DB, pages *tview.Pages, sideBarTextView *tview.TextView) {
 	titleInput := tview.NewInputField().SetLabel("Input Video Game Title: ")
+	ratingInput := tview.NewInputField().SetLabel("Input Rating: ")
+	releaseYearInput := tview.NewInputField().SetLabel("Input Release Year: ")
 
 	addGameForm := tview.NewForm().
 		AddFormItem(titleInput).
+		AddFormItem(ratingInput).
+		AddFormItem(releaseYearInput).
 		AddButton("Submit", func() {
 			title := titleInput.GetText()
+			rating := ratingInput.GetText()
+			year := releaseYearInput.GetText()
 
-			if title != "" {
-				utils.AddVideoGameInfo(title, db)
+			if title != "" && rating != "" && year != "" {
+
+				yearConv, err := strconv.Atoi(year)
+				if err != nil {
+					log.Println("ERROR:", err)
+				}
+
+				utils.AddVideoGameInfo(db, title, rating, yearConv)
 
 				titleInput.SetText("")
+				ratingInput.SetText("")
+				releaseYearInput.SetText("")
 
 				sideBarTextUpdate := fmt.Sprintf("Newest Content\nTitle: %s\n", title)
 				sideBarTextView.SetText(sideBarTextUpdate)

@@ -40,12 +40,16 @@ func InitDatabase() {
 	CREATE TABLE IF NOT EXISTS movies(
 		movieId INTEGER PRIMARY KEY AUTOINCREMENT, 
 		title TEXT NOT NULL,
+		rating TEXT NOT NULL,
+		releaseYear INTERGER NOT NULL,
 		time DATETIME NOT NULL
 	);
 
 	CREATE TABLE IF NOT EXISTS videoGames (
 		videoGameId INTEGER PRIMARY KEY AUTOINCREMENT,
 		title TEXT NOT NULL,
+		rating TEXT NOT NULL,
+		releaseYear INTERGER NOT NULL,
 		time DATETIME NOT NULL
 	)`
 
