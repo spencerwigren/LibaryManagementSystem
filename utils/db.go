@@ -12,7 +12,10 @@ func InitDatabase() {
 	//TODO: have a creation date and modify date
 	// Open (or create) a database
 	db, err := sql.Open("sqlite3", "projectdb.db")
-	checkError(err)
+	// checkError(err)
+	if err != nil {
+		log.Fatal(err)
+	}
 	defer db.Close()
 
 	// drop table
@@ -43,13 +46,18 @@ func InitDatabase() {
 	)`
 
 	_, err = db.Exec(createTableSQL)
-	checkError(err)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	log.Println("Database and tables created successfully!")
 }
 
 func dropTables(db *sql.DB, err error) {
-	checkError(err)
+	// checkError(err)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	tables := []string{"users", "books", "movies", "videoGames"}
 
@@ -64,10 +72,4 @@ func dropTables(db *sql.DB, err error) {
 
 	log.Println("Tables deleted successfully!")
 
-}
-
-func checkError(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
 }

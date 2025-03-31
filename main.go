@@ -29,7 +29,10 @@ func main() {
 
 	db, err := sql.Open("sqlite3", "projectdb.db")
 	// TODO if only one check error in main remove function and check it here.
-	checkError(err)
+	// checkError(err)
+	if err != nil {
+		log.Fatal(err)
+	}
 	defer db.Close()
 
 	directory()
@@ -99,10 +102,4 @@ func directory() {
 	Quit: 5
 	========================
 	`)
-}
-
-func checkError(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
 }
