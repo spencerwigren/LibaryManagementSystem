@@ -19,7 +19,7 @@ func InitDatabase() {
 	defer db.Close()
 
 	// drop tables
-	dropTables(db, err)
+	// dropTables(db, err)
 
 	// Create the table
 	createTableSQL := `
