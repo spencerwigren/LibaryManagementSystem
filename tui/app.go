@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	"Libarymanagementsystem/utils"
@@ -91,7 +92,7 @@ func App(db *sql.DB) {
 	addMovieMedia(db, pages, sideBarTextView)
 	addVidoGameMedia(db, pages, sideBarTextView)
 	addUser(db, pages)
-	mediaModal(pages)
+	mediaModal(pages, db, sideBarTextView)
 
 	// adding menu, main, and sidebar to grid to draw.
 	grid.AddItem(menu, 1, 0, 1, 1, 0, 100, true).
@@ -197,7 +198,7 @@ func updateMainAll(db *sql.DB, app *tview.Application, mainTextView *tview.TextV
 /*
 This is for mangaging adding media to db
 */
-func mediaModal(pages *tview.Pages) {
+func mediaModal(pages *tview.Pages, db *sql.DB, sideBarTextView *tview.TextView) {
 	// Pop up for adding media to app
 	addMediaModal := tview.NewModal().
 		AddButtons([]string{"Add Books", "Add Movie", "Add Game", "Add User", "Back"}).
@@ -213,6 +214,7 @@ func mediaModal(pages *tview.Pages) {
 				pages.SwitchToPage("addUser")
 			} else if buttonLabel == "Back" {
 				pages.SwitchToPage("mainMenu")
+				mostRecentEntries(db, sideBarTextView)
 			}
 		})
 
@@ -259,8 +261,8 @@ func addBookMedia(db *sql.DB, pages *tview.Pages, sideBarTextView *tview.TextVie
 
 				// TODO IDEA: make this a list of the 5 most recent entries in the db
 				// May need to make this it's own function at some point to draw all of them
-				sideBarTextUpdate := fmt.Sprintf("Newest Content\nTitle: %s\n", title)
-				sideBarTextView.SetText(sideBarTextUpdate)
+				// sideBarTextUpdate := fmt.Sprintf("Newest Content\nTitle: %s\n", title)
+				// sideBarTextView.SetText(sideBarTextUpdate)
 
 			}
 		}).
@@ -308,8 +310,8 @@ func addMovieMedia(db *sql.DB, pages *tview.Pages, sideBarTextView *tview.TextVi
 				ratingInput.SetText("")
 				releaseYearInput.SetText("")
 
-				sideBarTextUpdate := fmt.Sprintf("Newest Content\nTitle: %s\n", title)
-				sideBarTextView.SetText(sideBarTextUpdate)
+				// sideBarTextUpdate := fmt.Sprintf("Newest Content\nTitle: %s\n", title)
+				// sideBarTextView.SetText(sideBarTextUpdate)
 
 			}
 		}).
@@ -353,8 +355,8 @@ func addVidoGameMedia(db *sql.DB, pages *tview.Pages, sideBarTextView *tview.Tex
 				ratingInput.SetText("")
 				releaseYearInput.SetText("")
 
-				sideBarTextUpdate := fmt.Sprintf("Newest Content\nTitle: %s\n", title)
-				sideBarTextView.SetText(sideBarTextUpdate)
+				// sideBarTextUpdate := fmt.Sprintf("Newest Content\nTitle: %s\n", title)
+				// sideBarTextView.SetText(sideBarTextUpdate)
 			}
 		}).
 		AddButton("Back", func() {
@@ -399,3 +401,39 @@ func addUser(db *sql.DB, pages *tview.Pages) {
 }
 
 //---------------------------------------------------------------------------------//
+
+func mostRecentEntries(db *sql.DB, sideBarTextView *tview.TextView) {
+	rows := utils.QueryMostRecent(db)
+
+	// checking if no rows
+	if rows == nil {
+		log.Println("NO Rows Returned")
+		return
+	}
+	defer rows.Close()
+
+	sideBarTitle := "Most Recent Entries"
+	output := []string{sideBarTitle}
+	var title string
+	var time time.Time
+	count := 0
+
+	// Getting the data from the rows
+	// And saving it to the output
+	for rows.Next() {
+		if err := rows.Scan(&title, &time); err != nil {
+			log.Printf("ERROR %s", err)
+			continue
+		}
+		count++
+		output = append(output, fmt.Sprintf("[%d] Title: %s", count, title))
+		log.Printf("[%d] Title: %s", count, title)
+	}
+
+	// creating one single strings for output
+	// Setting it to the TUI view
+	outputFinal := strings.Join(output, "\n")
+	sideBarTextView.SetText(outputFinal)
+
+	// sideBarTextView.SetText("This is a test")
+}

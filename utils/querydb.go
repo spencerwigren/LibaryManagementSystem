@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -75,6 +76,7 @@ func SearchTables(db *sql.DB, search string) ([]interface{}, string, error) {
 			// comparing the value with the user search input
 			if strValue == search {
 				log.Printf("Found Search: [%d]: %s", i, tableName)
+				//Returning True Values
 				return valuePtrs, tableName, nil
 			} else {
 				// if not found, sent to log for debugging
@@ -94,6 +96,7 @@ func checkTableColumn(db *sql.DB, tableName, columnName string) bool {
 	// Checking table to see if the table as the columnName in it
 
 	// query to get table
+	log.Println("Table Name:", tableName)
 	query := fmt.Sprintf("PRAGMA table_info(%s)", tableName)
 	rows, err := db.Query(query)
 	if err != nil {
@@ -239,6 +242,48 @@ func debuggingTable(db *sql.DB) (any, error) {
 	}
 
 	return nil, err
+}
+
+func QueryMostRecent(db *sql.DB) *sql.Rows {
+
+	tableNames, err := fetchTableName(db)
+	if err != nil {
+		log.Printf("ERROR: %s", err)
+		return nil
+	}
+
+	if len(tableNames) == 0 {
+		log.Println("ERROR: No Tables in tableNames")
+		return nil
+	}
+
+	// tableNames[1:] skipping the first enty, not a table name
+	// Getting all table names with the time column in it
+	var queries []string
+	log.Println("TABLE NAME", tableNames[2:])
+	for _, tableName := range tableNames[2:] {
+		// checking if the table contains the column time
+		if tableName == "" {
+			continue
+		}
+
+		queries = append(queries, fmt.Sprintf("SELECT title, time FROM %s", tableName))
+	}
+
+	query := fmt.Sprintf(`
+		SELECT * FROM (
+			%s
+		)
+		ORDER BY time DESC
+		LIMIT 5;`, strings.Join(queries, " UNION ALL "))
+
+	rows, err := db.Query(query)
+	if err != nil {
+		log.Println("ERROR", err)
+		return nil
+	}
+
+	return rows
 }
 
 /*
