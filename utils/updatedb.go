@@ -11,7 +11,7 @@ import (
 func AddBookInfo(title string, pageNumber int, author string, db *sql.DB) {
 
 	dateTime := time.Now()
-	log.Printf("DATETIME: %v", dateTime)
+	// log.Printf("DATETIME: %v", dateTime)
 
 	insertSQL := `INSERT INTO books (title, pageNumber, author, time) VALUES (?, ?, ?, ?)`
 	_, err := db.Exec(insertSQL, title, pageNumber, author, dateTime)
