@@ -313,6 +313,10 @@ func addMovieMedia(db *sql.DB, pages *tview.Pages) *tview.Flex {
 			rating := ratingInput.GetText()
 			year := releaseYearInput.GetText()
 
+			title = strings.TrimSpace(title)
+			rating = strings.ToUpper(strings.TrimSpace(rating))
+			year = strings.TrimSpace(year)
+
 			if title != "" && rating != "" && year != "" {
 
 				yearConverted, err := strconv.Atoi(year)
@@ -324,6 +328,7 @@ func addMovieMedia(db *sql.DB, pages *tview.Pages) *tview.Flex {
 					releaseYearInput.SetText("")
 
 					return
+
 				} else if yearConverted < 1878 { // Said to be the first year a film was released https://historycooperative.org/first-movie-ever-made/
 					hy := handleYear(pages, "Movie")
 					pages.AddPage("errModalYear", hy, true, false)
@@ -338,6 +343,24 @@ func addMovieMedia(db *sql.DB, pages *tview.Pages) *tview.Flex {
 					pages.AddPage("errModalExisting", he, true, false)
 					pages.SwitchToPage("errModalExisting")
 					titleInput.SetText("")
+
+					return
+				}
+
+				// Checking for correct rating for movies
+				ratingList := []string{"G", "PG", "PG-13", "PG13", "R", "NC-17", "NC17"}
+
+				// Quicker look up
+				lookup := make(map[string]bool)
+				for _, v := range ratingList {
+					lookup[v] = true
+				}
+
+				// checking if not in
+				if !lookup[rating] {
+					hr := handleRating(pages, "Movie", ratingList)
+					pages.AddAndSwitchToPage("errModalRating", hr, true)
+					ratingInput.SetText("")
 
 					return
 				}
@@ -380,6 +403,10 @@ func addVidoGameMedia(db *sql.DB, pages *tview.Pages) *tview.Flex {
 			rating := ratingInput.GetText()
 			year := releaseYearInput.GetText()
 
+			title = strings.TrimSpace(title)
+			rating = strings.ToUpper(strings.TrimSpace(rating))
+			year = strings.TrimSpace(year)
+
 			if title != "" && rating != "" && year != "" {
 
 				yearConv, err := strconv.Atoi(year)
@@ -405,6 +432,24 @@ func addVidoGameMedia(db *sql.DB, pages *tview.Pages) *tview.Flex {
 					pages.AddPage("errModalExisting", he, true, false)
 					pages.SwitchToPage("errModalExisting")
 					titleInput.SetText("")
+
+					return
+				}
+
+				// Checking for correct rating for video games
+				ratingList := []string{"E", "E10+", "T", "M", "AO", "18+", "RP"}
+
+				// Quicker look up
+				lookup := make(map[string]bool)
+				for _, v := range ratingList {
+					lookup[v] = true
+				}
+
+				// checking if not in
+				if !lookup[rating] {
+					hr := handleRating(pages, "Game", ratingList)
+					pages.AddAndSwitchToPage("errModalRating", hr, true)
+					ratingInput.SetText("")
 
 					return
 				}
@@ -440,6 +485,8 @@ func addUser(db *sql.DB, pages *tview.Pages) *tview.Flex {
 		AddFormItem(userNameInput).
 		AddButton("Submit", func() {
 			user := userNameInput.GetText()
+
+			user = strings.TrimSpace(user)
 
 			if user != "" {
 				utils.AddUserInfo(user, db)
@@ -532,6 +579,21 @@ func handleYear(pages *tview.Pages, prePage string) *tview.Modal {
 func handleExisting(pages *tview.Pages, prePage string) *tview.Modal {
 	errModal := tview.NewModal().
 		SetText("Warning! Entry already exist").
+		AddButtons([]string{"OK"}).
+		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+			pre := fmt.Sprintf("add%s", prePage)
+
+			pages.SwitchToPage(pre)
+		})
+
+	return errModal
+}
+
+func handleRating(pages *tview.Pages, prePage string, ratingList []string) *tview.Modal {
+	message := fmt.Sprintf("Warning! Entry is not a Rating\n Rating: %s", ratingList)
+
+	errModal := tview.NewModal().
+		SetText(message).
 		AddButtons([]string{"OK"}).
 		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 			pre := fmt.Sprintf("add%s", prePage)
