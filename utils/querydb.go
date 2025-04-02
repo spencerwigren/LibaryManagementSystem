@@ -257,12 +257,13 @@ func QueryMostRecent(db *sql.DB) *sql.Rows {
 		return nil
 	}
 
-	// tableNames[1:] skipping the first enty, not a table name
+	// tableNames[2:] skipping the first and second enty, not a table name using here
 	// Getting all table names with the time column in it
 	var queries []string
-	log.Println("TABLE NAME", tableNames[2:])
+	// log.Println("TABLE NAME", tableNames[2:])
 	for _, tableName := range tableNames[2:] {
 		// checking if the table contains the column time
+		// BY seeing if the tableName is empty
 		if tableName == "" {
 			continue
 		}
@@ -270,6 +271,7 @@ func QueryMostRecent(db *sql.DB) *sql.Rows {
 		queries = append(queries, fmt.Sprintf("SELECT title, time FROM %s", tableName))
 	}
 
+	// Creating search query
 	query := fmt.Sprintf(`
 		SELECT * FROM (
 			%s
@@ -284,6 +286,63 @@ func QueryMostRecent(db *sql.DB) *sql.Rows {
 	}
 
 	return rows
+}
+
+func CheckExisting(db *sql.DB, existingEntry string) bool {
+
+	tableNames, err := fetchTableName(db)
+	if err != nil {
+		log.Printf("ERROR: %s", err)
+	} else if len(tableNames) == 0 {
+		log.Println("ERROR: NO Tables in TableNames")
+	}
+
+	// tableNames[2:] skipping first and seconds tables entry
+	var queries []string
+	for _, tableName := range tableNames[2:] {
+		// Checking if tablName is empty
+		if tableName == "" {
+			continue
+		}
+
+		queries = append(queries, fmt.Sprintf("SELECT title FROM %s", tableName))
+	}
+
+	// Creating search query
+	query := fmt.Sprintf(`
+		SELECT * FROM (
+			%s
+		)
+		ORDER BY title DESC;`, strings.Join(queries, " UNION ALL "))
+
+	// Getting data from db
+	rows, err := db.Query(query)
+	if err != nil {
+		log.Println("ERROR", err)
+		// Err Escape
+		return true
+	}
+
+	var title string
+
+	// Checking if entry is in db
+	for rows.Next() {
+		if err := rows.Scan(&title); err != nil {
+			log.Println("ERROR", err)
+			continue
+		}
+
+		log.Printf("TITLE: %s", title)
+
+		if title == existingEntry {
+			// Found similar
+			return true
+		}
+
+	}
+
+	// Not Found - good
+	return false
 }
 
 /*
