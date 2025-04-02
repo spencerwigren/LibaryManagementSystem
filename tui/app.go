@@ -78,11 +78,28 @@ func App(db *sql.DB) {
 	sideBar := sideBarTextView
 
 	// Setting Views for each media input
-	addBookMedia(db, pages)
-	addMovieMedia(db, pages)
-	addVidoGameMedia(db, pages)
-	addUser(db, pages)
+	addBookFlex := addBookMedia(db, pages)
+	addMovieFlex := addMovieMedia(db, pages)
+	addGameFlex := addVidoGameMedia(db, pages)
+	addUserFlex := addUser(db, pages)
 	mediaModal(pages, db, sideBarTextView)
+
+	pages.AddPage("addBook", addBookFlex, true, false)
+	pages.AddPage("addGame", addGameFlex, true, false)
+	pages.AddPage("addMovie", addMovieFlex, true, false)
+	pages.AddPage("addUser", addUserFlex, true, false)
+
+	// Setting Formate for input errors
+	// Default view
+	pre := "Book"
+
+	hpn := handlePageNumber(pages, pre)
+	hy := handleYear(pages, pre)
+	he := handleExisting(pages, pre)
+
+	pages.AddPage("errModalPageNum", hpn, true, false)
+	pages.AddPage("errModalYear", hy, true, false)
+	pages.AddPage("errModalExisting", he, true, false)
 
 	// adding menu, main, and sidebar to grid to draw.
 	grid.AddItem(menu, 1, 0, 1, 1, 0, 100, true).
@@ -173,19 +190,6 @@ func mainPrimitiveResults(searchResult []interface{}) []string {
 }
 
 /*
-For Now this will have to do on the search all
-TODO: come back and fix this, so that it works
-*/
-func updateMainAll(db *sql.DB, app *tview.Application, mainTextView *tview.TextView, searchInput *tview.InputField) {
-
-	go func() {
-		rowsEnteries := utils.QueryAllEntry(db)
-		log.Printf("Row Enteries: %s", rowsEnteries...)
-
-	}()
-}
-
-/*
 This is for mangaging adding media to db
 */
 func mediaModal(pages *tview.Pages, db *sql.DB, sideBarTextView *tview.TextView) {
@@ -213,14 +217,13 @@ func mediaModal(pages *tview.Pages, db *sql.DB, sideBarTextView *tview.TextView)
 	pages.AddPage("mediaModal", addMediaModal, true, false)
 }
 
-func addBookMedia(db *sql.DB, pages *tview.Pages) {
+func addBookMedia(db *sql.DB, pages *tview.Pages) *tview.Flex {
 	// Setting tview input fields
 	titleInput := tview.NewInputField().SetLabel("Input Title: ")
 	pageNumInput := tview.NewInputField().SetLabel("Input Page Number: ")
 	authorInput := tview.NewInputField().SetLabel("Input Author Name: ")
 
 	addMediaForm := tview.NewForm().
-		// AddInputField("Input Title: ", "", 0, nil, nil).
 		AddFormItem(titleInput).
 		AddFormItem(pageNumInput).
 		AddFormItem(authorInput).
@@ -230,14 +233,39 @@ func addBookMedia(db *sql.DB, pages *tview.Pages) {
 			pageNum := pageNumInput.GetText()
 			author := authorInput.GetText()
 
+			// Trimming Any Beginging or End Spaces
+			title = strings.TrimSpace(title)
+			pageNum = strings.TrimSpace(pageNum)
+			author = strings.TrimSpace(author)
+
 			// Check if all fields are filled
 			if title != "" && pageNum != "" && author != "" {
 
 				// Convert pageNum from str to int
 				pageNumber, err := strconv.Atoi(pageNum)
 				if err != nil {
-					// TODO add error to page
-					fmt.Println(pageNumber, "Not a Valid Page Number")
+					hpn := handlePageNumber(pages, "Book")          // Setting correct page to return to
+					pages.AddPage("errModalYear", hpn, true, false) // Creating that page
+					pages.SwitchToPage("errModalPageNum")           // Switching to error page
+					pageNumInput.SetText("")                        // Clearing wrong input
+
+					return
+					// checking out of bounds
+				} else if pageNumber > 100100 || pageNumber <= 0 {
+					hpn := handlePageNumber(pages, "Book")          // Setting correct page to return to
+					pages.AddPage("errModalYear", hpn, true, false) // Creating that page
+					pages.SwitchToPage("errModalPageNum")           // Switching to error page
+					pageNumInput.SetText("")                        // Clearing wrong input
+
+					return
+				}
+				// checking if entry exist
+				if utils.CheckExisting(db, title) {
+					he := handleExisting(pages, "Book")                // Setting correct page to return to
+					pages.AddPage("errModalExisting", he, true, false) //Creating that page
+					pages.SwitchToPage("errModalExisting")             // Swithcing to error page
+					titleInput.SetText("")                             // Clearing wrong input
+
 					return
 				}
 
@@ -248,16 +276,13 @@ func addBookMedia(db *sql.DB, pages *tview.Pages) {
 				titleInput.SetText("")
 				pageNumInput.SetText("")
 				authorInput.SetText("")
-
-				// TODO IDEA: make this a list of the 5 most recent entries in the db
-				// May need to make this it's own function at some point to draw all of them
-				// sideBarTextUpdate := fmt.Sprintf("Newest Content\nTitle: %s\n", title)
-				// sideBarTextView.SetText(sideBarTextUpdate)
-
 			}
 		}).
 		AddButton("Back", func() {
-			// app.SetRoot(grid, true)
+			titleInput.SetText("")
+			pageNumInput.SetText("")
+			authorInput.SetText("")
+
 			pages.SwitchToPage("mediaModal")
 		})
 
@@ -269,12 +294,12 @@ func addBookMedia(db *sql.DB, pages *tview.Pages) {
 		SetDirection(tview.FlexColumn).
 		AddItem(addMediaForm, 0, 1, true)
 
-	pages.AddPage("addBook", addBookFlex, true, false)
+	return addBookFlex
 }
 
 //-----Note that the following function are patterened after addBookMedia()-----//
 
-func addMovieMedia(db *sql.DB, pages *tview.Pages) {
+func addMovieMedia(db *sql.DB, pages *tview.Pages) *tview.Flex {
 	titleInput := tview.NewInputField().SetLabel("Input Title Name: ")
 	ratingInput := tview.NewInputField().SetLabel("Input Rating: ")
 	releaseYearInput := tview.NewInputField().SetLabel("Input Release Year: ")
@@ -293,32 +318,55 @@ func addMovieMedia(db *sql.DB, pages *tview.Pages) {
 				yearConverted, err := strconv.Atoi(year)
 				if err != nil {
 					log.Println("ERROR:", err)
+					hy := handleYear(pages, "Movie")
+					pages.AddPage("errModalYear", hy, true, false)
+					pages.SwitchToPage("errModalYear")
+					releaseYearInput.SetText("")
+
+					return
+				} else if yearConverted < 1878 { // Said to be the first year a film was released https://historycooperative.org/first-movie-ever-made/
+					hy := handleYear(pages, "Movie")
+					pages.AddPage("errModalYear", hy, true, false)
+					pages.SwitchToPage("errModalYear")
+					releaseYearInput.SetText("")
+
+					return
 				}
+
+				if utils.CheckExisting(db, title) {
+					he := handleExisting(pages, "Movie")
+					pages.AddPage("errModalExisting", he, true, false)
+					pages.SwitchToPage("errModalExisting")
+					titleInput.SetText("")
+
+					return
+				}
+
 				utils.AddMovieInfo(db, title, rating, yearConverted)
 
 				titleInput.SetText("")
 				ratingInput.SetText("")
 				releaseYearInput.SetText("")
-
-				// sideBarTextUpdate := fmt.Sprintf("Newest Content\nTitle: %s\n", title)
-				// sideBarTextView.SetText(sideBarTextUpdate)
-
 			}
 		}).
 		AddButton("Back", func() {
+			titleInput.SetText("")
+			ratingInput.SetText("")
+			releaseYearInput.SetText("")
+
 			pages.SwitchToPage("mediaModal")
 		})
 
 	addMovieForm.SetBorder(true).SetTitle("Add Movie").SetTitleAlign(tview.AlignCenter)
 
-	addBookFlex := tview.NewFlex().
+	addMovieFlex := tview.NewFlex().
 		SetDirection(tview.FlexColumn).
 		AddItem(addMovieForm, 0, 1, true)
 
-	pages.AddPage("addMovie", addBookFlex, true, false)
+	return addMovieFlex
 }
 
-func addVidoGameMedia(db *sql.DB, pages *tview.Pages) {
+func addVidoGameMedia(db *sql.DB, pages *tview.Pages) *tview.Flex {
 	titleInput := tview.NewInputField().SetLabel("Input Video Game Title: ")
 	ratingInput := tview.NewInputField().SetLabel("Input Rating: ")
 	releaseYearInput := tview.NewInputField().SetLabel("Input Release Year: ")
@@ -337,6 +385,28 @@ func addVidoGameMedia(db *sql.DB, pages *tview.Pages) {
 				yearConv, err := strconv.Atoi(year)
 				if err != nil {
 					log.Println("ERROR:", err)
+					hpn := handleYear(pages, "Game")
+					pages.AddPage("errModalYear", hpn, true, false)
+					pages.SwitchToPage("errModalYear")
+					releaseYearInput.SetText("")
+
+					return
+				} else if yearConv <= 1968 { // Said to be the first year a video game was released "Tennis for Two"
+					hpn := handleYear(pages, "Game")
+					pages.AddPage("errModalYear", hpn, true, false)
+					pages.SwitchToPage("errModalYear")
+					releaseYearInput.SetText("")
+
+					return
+				}
+
+				if utils.CheckExisting(db, title) {
+					he := handleExisting(pages, "Game")
+					pages.AddPage("errModalExisting", he, true, false)
+					pages.SwitchToPage("errModalExisting")
+					titleInput.SetText("")
+
+					return
 				}
 
 				utils.AddVideoGameInfo(db, title, rating, yearConv)
@@ -344,12 +414,13 @@ func addVidoGameMedia(db *sql.DB, pages *tview.Pages) {
 				titleInput.SetText("")
 				ratingInput.SetText("")
 				releaseYearInput.SetText("")
-
-				// sideBarTextUpdate := fmt.Sprintf("Newest Content\nTitle: %s\n", title)
-				// sideBarTextView.SetText(sideBarTextUpdate)
 			}
 		}).
 		AddButton("Back", func() {
+			titleInput.SetText("")
+			ratingInput.SetText("")
+			releaseYearInput.SetText("")
+
 			pages.SwitchToPage("mediaModal")
 		})
 
@@ -359,10 +430,10 @@ func addVidoGameMedia(db *sql.DB, pages *tview.Pages) {
 		SetDirection(tview.FlexColumn).
 		AddItem(addGameForm, 0, 1, true)
 
-	pages.AddPage("addGame", addGameFlex, true, false)
+	return addGameFlex
 }
 
-func addUser(db *sql.DB, pages *tview.Pages) {
+func addUser(db *sql.DB, pages *tview.Pages) *tview.Flex {
 	userNameInput := tview.NewInputField().SetLabel("Input User Name")
 
 	addUserForm := tview.NewForm().
@@ -377,6 +448,8 @@ func addUser(db *sql.DB, pages *tview.Pages) {
 			}
 		}).
 		AddButton("Back", func() {
+			userNameInput.SetText("")
+
 			pages.SwitchToPage("mediaModal")
 		})
 
@@ -386,7 +459,7 @@ func addUser(db *sql.DB, pages *tview.Pages) {
 		SetDirection(tview.FlexColumn).
 		AddItem(addUserForm, 0, 1, true)
 
-	pages.AddPage("addUser", addUserFlex, true, false)
+	return addUserFlex
 
 }
 
@@ -427,4 +500,57 @@ func mostRecentEntries(db *sql.DB, sideBarTextView *tview.TextView) {
 	// Setting it to the TUI view
 	outputFinal := strings.Join(output, "\n")
 	sideBarTextView.SetText(outputFinal)
+}
+
+func handlePageNumber(pages *tview.Pages, prePage string) *tview.Modal {
+	errModal := tview.NewModal().
+		SetText("Warning! Not a Valid Page Number").
+		AddButtons([]string{"OK"}).
+		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+			pre := fmt.Sprintf("add%s", prePage)
+
+			pages.SwitchToPage(pre)
+		})
+
+	return errModal
+}
+
+func handleYear(pages *tview.Pages, prePage string) *tview.Modal {
+	errModal := tview.NewModal().
+		SetText("Warning! Not a Valid Year ").
+		AddButtons([]string{"OK"}).
+		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+			pre := fmt.Sprintf("add%s", prePage)
+			log.Println("ERROR:", pre)
+
+			pages.SwitchToPage(pre)
+		})
+
+	return errModal
+}
+
+func handleExisting(pages *tview.Pages, prePage string) *tview.Modal {
+	errModal := tview.NewModal().
+		SetText("Warning! Entry already exist").
+		AddButtons([]string{"OK"}).
+		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+			pre := fmt.Sprintf("add%s", prePage)
+
+			pages.SwitchToPage(pre)
+		})
+
+	return errModal
+}
+
+/*
+For Now this will have to do on the search all
+TODO: come back and fix this, so that it works
+*/
+func updateMainAll(db *sql.DB, app *tview.Application, mainTextView *tview.TextView, searchInput *tview.InputField) {
+
+	go func() {
+		rowsEnteries := utils.QueryAllEntry(db)
+		log.Printf("Row Enteries: %s", rowsEnteries...)
+
+	}()
 }
