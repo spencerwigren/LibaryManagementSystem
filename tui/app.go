@@ -89,6 +89,14 @@ func App(db *sql.DB) {
 	pages.AddPage("addMovie", addMovieFlex, true, false)
 	pages.AddPage("addUser", addUserFlex, true, false)
 
+	// Setting Media Update Views
+	updateBook := updateBookModal(db, pages)
+	updateMovie := updateMovieModal(db, pages)
+	updateGame := updateVideoGameModal(db, pages)
+
+	pages.AddPage("addUpdateBook", updateBook, true, false)
+	pages.AddPage("addUpdateMovie", updateMovie, true, false)
+	pages.AddPage("addUpdateGame", updateGame, true, false)
 	// Setting Formate for input errors
 	// Default view
 	pre := "Book"
@@ -96,10 +104,12 @@ func App(db *sql.DB) {
 	hpn := handlePageNumber(pages, pre)
 	hy := handleYear(pages, pre)
 	he := handleExisting(pages, pre)
+	het := handleExistingTrue(pages, pre)
 
 	pages.AddPage("errModalPageNum", hpn, true, false)
 	pages.AddPage("errModalYear", hy, true, false)
 	pages.AddPage("errModalExisting", he, true, false)
+	pages.AddPage("errModalExistingTrue", het, true, false)
 
 	// adding menu, main, and sidebar to grid to draw.
 	grid.AddItem(menu, 1, 0, 1, 1, 0, 100, true).
@@ -278,6 +288,9 @@ func addBookMedia(db *sql.DB, pages *tview.Pages) *tview.Flex {
 				authorInput.SetText("")
 			}
 		}).
+		AddButton("Update Entry", func() {
+			pages.SwitchToPage("addUpdateBook")
+		}).
 		AddButton("Back", func() {
 			titleInput.SetText("")
 			pageNumInput.SetText("")
@@ -372,6 +385,9 @@ func addMovieMedia(db *sql.DB, pages *tview.Pages) *tview.Flex {
 				releaseYearInput.SetText("")
 			}
 		}).
+		AddButton("Update Entry", func() {
+			pages.SwitchToPage("addUpdateMovie")
+		}).
 		AddButton("Back", func() {
 			titleInput.SetText("")
 			ratingInput.SetText("")
@@ -461,6 +477,9 @@ func addVidoGameMedia(db *sql.DB, pages *tview.Pages) *tview.Flex {
 				releaseYearInput.SetText("")
 			}
 		}).
+		AddButton("Update Entry", func() {
+			pages.SwitchToPage("addUpdateGame")
+		}).
 		AddButton("Back", func() {
 			titleInput.SetText("")
 			ratingInput.SetText("")
@@ -469,7 +488,7 @@ func addVidoGameMedia(db *sql.DB, pages *tview.Pages) *tview.Flex {
 			pages.SwitchToPage("mediaModal")
 		})
 
-	addGameForm.SetBorder(true).SetTitle("Add Movie").SetTitleAlign(tview.AlignCenter)
+	addGameForm.SetBorder(true).SetTitle("Add Video Game").SetTitleAlign(tview.AlignCenter)
 
 	addGameFlex := tview.NewFlex().
 		SetDirection(tview.FlexColumn).
@@ -554,6 +573,7 @@ func handlePageNumber(pages *tview.Pages, prePage string) *tview.Modal {
 		SetText("Warning! Not a Valid Page Number").
 		AddButtons([]string{"OK"}).
 		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+
 			pre := fmt.Sprintf("add%s", prePage)
 
 			pages.SwitchToPage(pre)
@@ -602,6 +622,272 @@ func handleRating(pages *tview.Pages, prePage string, ratingList []string) *tvie
 		})
 
 	return errModal
+}
+
+func handleExistingTrue(pages *tview.Pages, prePage string) *tview.Modal {
+	errModal := tview.NewModal().
+		SetText("Warning! Entry Doesn't exist").
+		AddButtons([]string{"OK"}).
+		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
+			pre := fmt.Sprintf("add%s", prePage)
+
+			pages.SwitchToPage(pre)
+		})
+
+	return errModal
+}
+
+func updateBookModal(db *sql.DB, pages *tview.Pages) *tview.Flex {
+	oringalTitle := tview.NewInputField().SetLabel("Enter Title of Media to Update")
+	titleUpdate := tview.NewInputField().SetLabel("Update Title:")
+	pageNumUpdate := tview.NewInputField().SetLabel("Update Page Number:")
+	authorUpdate := tview.NewInputField().SetLabel("Update Author:")
+
+	updateForm := tview.NewForm().
+		AddFormItem(oringalTitle).
+		AddFormItem(titleUpdate).
+		AddFormItem(pageNumUpdate).
+		AddFormItem(authorUpdate).
+		AddButton("Update", func() {
+			orgTitle := strings.TrimSpace(oringalTitle.GetText())
+			titleUp := strings.TrimSpace(titleUpdate.GetText())
+			pageNumUp := strings.TrimSpace(pageNumUpdate.GetText())
+			authUp := strings.TrimSpace(authorUpdate.GetText())
+
+			log.Println("CHECKING EXISTING", utils.CheckExisting(db, orgTitle))
+
+			if orgTitle != "" && utils.CheckExisting(db, orgTitle) {
+				pageNum, err := strconv.Atoi(pageNumUp)
+				if err != nil {
+					hpn := handlePageNumber(pages, "UpdateBook")    // Setting correct page to return to
+					pages.AddPage("errModalYear", hpn, true, false) // Creating that page
+					pages.SwitchToPage("errModalPageNum")           // Switching to error page
+					pageNumUpdate.SetText("")
+
+					return
+					// Clearing wrong input
+				} else if pageNum > 100100 || pageNum <= 0 {
+					hpn := handlePageNumber(pages, "UpdateBook")    // Setting correct page to return to
+					pages.AddPage("errModalYear", hpn, true, false) // Creating that page
+					pages.SwitchToPage("errModalPageNum")           // Switching to error page
+					pageNumUpdate.SetText("")                       // Clearing wrong input
+
+					return
+				}
+
+				utils.UpdateEntryBook(db, titleUp, pageNum, authUp, orgTitle)
+
+				oringalTitle.SetText("")
+				titleUpdate.SetText("")
+				pageNumUpdate.SetText("")
+				authorUpdate.SetText("")
+
+			} else {
+				he := handleExistingTrue(pages, "UpdateBook")          // Setting correct page to return to
+				pages.AddPage("errModalExistingTrue", he, true, false) //Creating that page
+				pages.SwitchToPage("errModalExistingTrue")             // Swithcing to error page
+				oringalTitle.SetText("")                               // Clearing wrong input
+
+				return
+			}
+		}).
+		AddButton("Back to Book", func() {
+			oringalTitle.SetText("")
+			titleUpdate.SetText("")
+			pageNumUpdate.SetText("")
+			authorUpdate.SetText("")
+
+			pages.SwitchToPage("addBook")
+		})
+
+	updateForm.SetBorder(true).SetTitle("Update Book Media").SetTitleAlign(tview.AlignCenter)
+
+	updateBookFlex := tview.NewFlex().
+		SetDirection(tview.FlexColumn).
+		AddItem(updateForm, 0, 1, true)
+
+	return updateBookFlex
+}
+
+func updateMovieModal(db *sql.DB, pages *tview.Pages) *tview.Flex {
+	oringalTitle := tview.NewInputField().SetLabel("Enter Title of Media to Update")
+	titleUpdate := tview.NewInputField().SetLabel("Update Title:")
+	ratingUpdate := tview.NewInputField().SetLabel("Update Rating:")
+	releaseYearUpdate := tview.NewInputField().SetLabel("Update Release Year:")
+
+	updateForm := tview.NewForm().
+		AddFormItem(oringalTitle).
+		AddFormItem(titleUpdate).
+		AddFormItem(ratingUpdate).
+		AddFormItem(releaseYearUpdate).
+		AddButton("Update", func() {
+			orgTitle := strings.TrimSpace(oringalTitle.GetText())
+			titleUp := strings.TrimSpace(titleUpdate.GetText())
+			ratingUp := strings.ToUpper(strings.TrimSpace(ratingUpdate.GetText()))
+			yearUp := strings.TrimSpace(releaseYearUpdate.GetText())
+
+			log.Println("CHECKING EXISTING", utils.CheckExisting(db, orgTitle))
+
+			if orgTitle != "" && utils.CheckExisting(db, orgTitle) {
+				yearConverted, err := strconv.Atoi(yearUp)
+				if err != nil {
+					log.Println("ERROR:", err)
+					hy := handleYear(pages, "UpdateMovie")
+					pages.AddPage("errModalYear", hy, true, false)
+					pages.SwitchToPage("errModalYear")
+					releaseYearUpdate.SetText("")
+
+					return
+
+				} else if yearConverted < 1878 { // Said to be the first year a film was released https://historycooperative.org/first-movie-ever-made/
+					hy := handleYear(pages, "UpdateMovie")
+					pages.AddPage("errModalYear", hy, true, false)
+					pages.SwitchToPage("errModalYear")
+					releaseYearUpdate.SetText("")
+
+					return
+				}
+
+				// Checking for correct rating for movies
+				ratingList := []string{"G", "PG", "PG-13", "PG13", "R", "NC-17", "NC17"}
+
+				// Quicker look up
+				lookup := make(map[string]bool)
+				for _, v := range ratingList {
+					lookup[v] = true
+				}
+
+				// checking if not in
+				if !lookup[ratingUp] {
+					hr := handleRating(pages, "UpdateMovie", ratingList)
+					pages.AddAndSwitchToPage("errModalRating", hr, true)
+					ratingUpdate.SetText("")
+
+					return
+				}
+
+				utils.UpdateEntryMovie(db, titleUp, ratingUp, yearConverted, orgTitle)
+
+				oringalTitle.SetText("")
+				titleUpdate.SetText("")
+				ratingUpdate.SetText("")
+				releaseYearUpdate.SetText("")
+
+			} else {
+				he := handleExistingTrue(pages, "UpdateMovie")
+				pages.AddPage("errModalExistingTrue", he, true, false)
+				pages.SwitchToPage("errModalExistingTrue")
+				oringalTitle.SetText("")
+
+				return
+			}
+		}).
+		AddButton("Back to Movie", func() {
+			oringalTitle.SetText("")
+			titleUpdate.SetText("")
+			ratingUpdate.SetText("")
+			releaseYearUpdate.SetText("")
+
+			pages.SwitchToPage("addMovie")
+		})
+
+	updateForm.SetBorder(true).SetTitle("Update Movie Media").SetTitleAlign(tview.AlignCenter)
+	updateMovieFlex := tview.NewFlex().
+		SetDirection(tview.FlexColumn).
+		AddItem(updateForm, 0, 1, true)
+
+	return updateMovieFlex
+}
+
+func updateVideoGameModal(db *sql.DB, pages *tview.Pages) *tview.Flex {
+	oringalTitle := tview.NewInputField().SetLabel("Enter Title of Video Game to Update")
+	titleUpdate := tview.NewInputField().SetLabel("Update Title:")
+	ratingUpdate := tview.NewInputField().SetLabel("Update Rating:")
+	releaseYearUpdate := tview.NewInputField().SetLabel("Update Release Year:")
+
+	updateForm := tview.NewForm().
+		AddFormItem(oringalTitle).
+		AddFormItem(titleUpdate).
+		AddFormItem(ratingUpdate).
+		AddFormItem(releaseYearUpdate).
+		AddButton("Update", func() {
+			orgTitle := strings.TrimSpace(oringalTitle.GetText())
+			titleUp := strings.TrimSpace(titleUpdate.GetText())
+			ratingUp := strings.ToUpper(strings.TrimSpace(ratingUpdate.GetText()))
+			yearUp := strings.TrimSpace(releaseYearUpdate.GetText())
+
+			log.Println("CHECKING EXISTING", utils.CheckExisting(db, orgTitle))
+
+			if orgTitle != "" && utils.CheckExisting(db, orgTitle) {
+				yearConverted, err := strconv.Atoi(yearUp)
+				if err != nil {
+					log.Println("ERROR:", err)
+					hy := handleYear(pages, "UpdateGame")
+					pages.AddPage("errModalYear", hy, true, false)
+					pages.SwitchToPage("errModalYear")
+					releaseYearUpdate.SetText("")
+
+					return
+
+				} else if yearConverted < 1878 { // Said to be the first year a film was released https://historycooperative.org/first-movie-ever-made/
+					hy := handleYear(pages, "UpdateGame")
+					pages.AddPage("errModalYear", hy, true, false)
+					pages.SwitchToPage("errModalYear")
+					releaseYearUpdate.SetText("")
+
+					return
+				}
+
+				// Checking for correct rating for movies
+				ratingList := []string{"E", "E10+", "T", "M", "AO", "18+", "RP"}
+
+				// Quicker look up
+				lookup := make(map[string]bool)
+				for _, v := range ratingList {
+					lookup[v] = true
+				}
+
+				// checking if not in
+				if !lookup[ratingUp] {
+					hr := handleRating(pages, "UpdateGame", ratingList)
+					pages.AddAndSwitchToPage("errModalRating", hr, true)
+					ratingUpdate.SetText("")
+
+					return
+				}
+
+				utils.UpdateEntryGames(db, titleUp, ratingUp, yearConverted, orgTitle)
+
+				oringalTitle.SetText("")
+				titleUpdate.SetText("")
+				ratingUpdate.SetText("")
+				releaseYearUpdate.SetText("")
+
+			} else {
+				he := handleExistingTrue(pages, "UpdateGame")
+				pages.AddPage("errModalExistingTrue", he, true, false)
+				pages.SwitchToPage("errModalExistingTrue")
+				oringalTitle.SetText("")
+
+				return
+			}
+		}).
+		AddButton("Back to Video Game", func() {
+			oringalTitle.SetText("")
+			titleUpdate.SetText("")
+			ratingUpdate.SetText("")
+			releaseYearUpdate.SetText("")
+
+			pages.SwitchToPage("addGame")
+		})
+
+	updateForm.SetBorder(true).SetTitle("Update Video Game Media").SetTitleAlign(tview.AlignCenter)
+	updateMovieFlex := tview.NewFlex().
+		SetDirection(tview.FlexColumn).
+		AddItem(updateForm, 0, 1, true)
+
+	return updateMovieFlex
+
 }
 
 /*

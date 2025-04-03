@@ -289,6 +289,11 @@ func QueryMostRecent(db *sql.DB) *sql.Rows {
 }
 
 func CheckExisting(db *sql.DB, existingEntry string) bool {
+	/*
+		Checks to see if an entry is already in DB
+		returns true if entry is in db
+		returns false if entry is not in db
+	*/
 
 	tableNames, err := fetchTableName(db)
 	if err != nil {
@@ -322,6 +327,7 @@ func CheckExisting(db *sql.DB, existingEntry string) bool {
 		// Err Escape
 		return true
 	}
+	defer rows.Close()
 
 	var title string
 
