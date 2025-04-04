@@ -351,6 +351,33 @@ func CheckExisting(db *sql.DB, existingEntry string) bool {
 	return false
 }
 
+func CheckUserExisting(db *sql.DB, existingEntry string) bool {
+
+	querySelect := "SELECT name FROM users"
+
+	rows, err := db.Query(querySelect)
+	if err != nil {
+		log.Println("ERROR", err)
+		return true
+	}
+	defer rows.Close()
+
+	var name string
+
+	for rows.Next() {
+		if err := rows.Scan(&name); err != nil {
+			log.Println("ERROR", err)
+			continue
+		}
+
+		if name == existingEntry {
+			return true
+		}
+	}
+
+	return false
+}
+
 /*
 Debugging whats in db in the termial
 */

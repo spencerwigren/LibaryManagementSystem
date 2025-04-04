@@ -503,13 +503,18 @@ func addUser(db *sql.DB, pages *tview.Pages) *tview.Flex {
 	addUserForm := tview.NewForm().
 		AddFormItem(userNameInput).
 		AddButton("Submit", func() {
-			user := userNameInput.GetText()
+			user := strings.TrimSpace(userNameInput.GetText())
 
 			user = strings.TrimSpace(user)
 
-			if user != "" {
+			if user != "" && !utils.CheckUserExisting(db, user) {
 				utils.AddUserInfo(user, db)
 
+				userNameInput.SetText("")
+			} else {
+				he := handleExisting(pages, "User")
+				pages.AddPage("errModalExisting", he, true, false)
+				pages.SwitchToPage("errModalExisting")
 				userNameInput.SetText("")
 			}
 		}).
@@ -519,7 +524,7 @@ func addUser(db *sql.DB, pages *tview.Pages) *tview.Flex {
 			pages.SwitchToPage("mediaModal")
 		})
 
-	addUserForm.SetBorder(true).SetTitle("Add Movie").SetTitleAlign(tview.AlignCenter)
+	addUserForm.SetBorder(true).SetTitle("Add User").SetTitleAlign(tview.AlignCenter)
 
 	addUserFlex := tview.NewFlex().
 		SetDirection(tview.FlexColumn).
