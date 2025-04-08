@@ -2,14 +2,12 @@ package utils
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
 func InitDatabase() {
-	//TODO: have a creation date and modify date
 	// Open (or create) a database
 	db, err := sql.Open("sqlite3", "projectdb.db")
 	// checkError(err)
@@ -19,7 +17,7 @@ func InitDatabase() {
 	defer db.Close()
 
 	// drop tables
-	dropTables(db, err)
+	// dropTables(db, err)
 
 	// Create the table
 	createTableSQL := `
@@ -62,22 +60,22 @@ func InitDatabase() {
 	log.Println("Database and tables created successfully!")
 }
 
-func dropTables(db *sql.DB, err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
+// func dropTables(db *sql.DB, err error) {
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
 
-	tables := []string{"users", "books", "movies", "videoGames"}
+// 	tables := []string{"users", "books", "movies", "videoGames"}
 
-	for _, table := range tables {
-		query := fmt.Sprintf("DROP TABLE IF EXISTS %s;", table)
-		_, err := db.Exec(query)
-		if err != nil {
-			log.Fatalf("Failed to delete table %s: %v", table, err)
-		}
-		fmt.Printf("Table %s deleted successfully!\n", table)
-	}
+// 	for _, table := range tables {
+// 		query := fmt.Sprintf("DROP TABLE IF EXISTS %s;", table)
+// 		_, err := db.Exec(query)
+// 		if err != nil {
+// 			log.Fatalf("Failed to delete table %s: %v", table, err)
+// 		}
+// 		fmt.Printf("Table %s deleted successfully!\n", table)
+// 	}
 
-	log.Println("Tables deleted successfully!")
+// 	log.Println("Tables deleted successfully!")
 
-}
+// }

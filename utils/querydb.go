@@ -4,15 +4,12 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"strconv"
 	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
 func SearchTables(db *sql.DB, search string) ([]interface{}, string, error) {
-	// TODO: may need to find a way to search outside of title, like page number or author
-
 	tableNames, err := fetchTableName(db)
 	if err != nil {
 		log.Printf("In SearchTables: %s\n", err)
@@ -25,7 +22,6 @@ func SearchTables(db *sql.DB, search string) ([]interface{}, string, error) {
 	// tableNames: [sqlite_sequence, users, books, movies, videoGames]
 	// sqlite_sequence in tableNames is not one of the tables
 	for i, tableName := range tableNames[1:] {
-		// TODO: The title is temp, will need to find a way to seach all fields
 		if !checkTableColumn(db, tableName, "title") {
 			log.Println("Not In Table", tableName)
 			continue
@@ -59,11 +55,6 @@ func SearchTables(db *sql.DB, search string) ([]interface{}, string, error) {
 				log.Printf("IN SEARCH TABLES rows.Next() processing rows: %s\n", err)
 				return nil, "", err
 			}
-			//TODO: make this less hardcoded
-			// Value 0 is the id number
-			// Value 1 is the title
-			// Value 2 is the page number
-			// Value 3 is the Author
 
 			// converting valuePtrs[1] - title - into string for comparison
 			strValue, ok := (*(valuePtrs[1].(*interface{}))).(string)
@@ -211,38 +202,38 @@ func QueryAllEntry(db *sql.DB) []any {
 	return rowsEntries
 }
 
-func debuggingTable(db *sql.DB) (any, error) {
+// func debuggingTable(db *sql.DB) (any, error) {
 
-	temp, err := db.Query("PRAGMA table_info(books);")
-	if err != nil {
-		return nil, err
-	}
-	defer temp.Close()
+// 	temp, err := db.Query("PRAGMA table_info(books);")
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	defer temp.Close()
 
-	log.Println("Table Structure:")
-	for temp.Next() {
-		var cid int
-		var name string
-		var ctype string
-		var notnull int
-		var dflt_value sql.NullString
-		var pk int
+// 	log.Println("Table Structure:")
+// 	for temp.Next() {
+// 		var cid int
+// 		var name string
+// 		var ctype string
+// 		var notnull int
+// 		var dflt_value sql.NullString
+// 		var pk int
 
-		err := temp.Scan(&cid, &name, &ctype, &notnull, &dflt_value, &pk)
-		if err != nil {
-			return nil, err
-		}
+// 		err := temp.Scan(&cid, &name, &ctype, &notnull, &dflt_value, &pk)
+// 		if err != nil {
+// 			return nil, err
+// 		}
 
-		log.Printf("Column ID: %d, Name: %s, Type: %s, Not Null: %d, Default: %v, Primary Key: %d\n",
-			cid, name, ctype, notnull, dflt_value.String, pk)
-	}
+// 		log.Printf("Column ID: %d, Name: %s, Type: %s, Not Null: %d, Default: %v, Primary Key: %d\n",
+// 			cid, name, ctype, notnull, dflt_value.String, pk)
+// 	}
 
-	if err = temp.Err(); err != nil {
-		return nil, err
-	}
+// 	if err = temp.Err(); err != nil {
+// 		return nil, err
+// 	}
 
-	return nil, err
-}
+// 	return nil, err
+// }
 
 func QueryMostRecent(db *sql.DB) *sql.Rows {
 
@@ -376,187 +367,4 @@ func CheckUserExisting(db *sql.DB, existingEntry string) bool {
 	}
 
 	return false
-}
-
-/*
-Debugging whats in db in the termial
-*/
-func Query(db *sql.DB) {
-
-	quaryDirectory()
-	userQueryCommandExe(db)
-
-}
-
-func queryBooksTerminal(db *sql.DB) {
-	// This will get all bookss
-	bookRows, err := db.Query("SELECT bookId, title, pageNumber, author FROM books;")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer bookRows.Close()
-
-	fmt.Println("\nBooks:")
-	for bookRows.Next() {
-		var bookId int
-		var title string
-		var pageNumber int
-		var author string
-
-		err = bookRows.Scan(&bookId, &title, &pageNumber, &author)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		fmt.Printf("Book ID: %d, Title: %s, Page Number: %d, Author: %s\n", bookId, title, pageNumber, author)
-	}
-
-	if err = bookRows.Err(); err != nil {
-		log.Fatal(err)
-	}
-
-}
-
-func queryMoviesTerminal(db *sql.DB) {
-	// This will get all Movies
-	movieRows, err := db.Query("SELECT movieId, title FROM movies")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer movieRows.Close()
-
-	fmt.Println("\nMovies:")
-	for movieRows.Next() {
-		var movieId int
-		var title string
-
-		err = movieRows.Scan(&movieId, &title)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		fmt.Printf("Movie ID: %d, Title: %s\n", movieId, title)
-
-	}
-
-	if err = movieRows.Err(); err != nil {
-		log.Fatal(err)
-	}
-
-}
-
-func queryGamesTerminal(db *sql.DB) {
-	// This will get all Video Games
-	videoGameRows, err := db.Query("SELECT videoGameId, title FROM videoGames")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer videoGameRows.Close()
-
-	fmt.Println("\nVideo Games:")
-	for videoGameRows.Next() {
-		var videoGameId int
-		var title string
-
-		err = videoGameRows.Scan(&videoGameId, &title)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		fmt.Printf("Video Games ID: %d, Title: %s\n", videoGameId, title)
-	}
-
-}
-
-func queryUserTerminal(db *sql.DB) {
-	// This will get all Users
-	userRows, err := db.Query("SELECT id, name FROM users;")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer userRows.Close()
-
-	fmt.Println("\nUsers:")
-	for userRows.Next() {
-		var id int
-		var name string
-
-		err = userRows.Scan(&id, &name)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		fmt.Printf("ID: %d, Name: %s\n", id, name)
-	}
-
-	if err = userRows.Err(); err != nil {
-		log.Fatal(err)
-	}
-}
-
-func queryAll(db *sql.DB) {
-	// This will get all Info
-	queryBooksTerminal(db)
-	queryMoviesTerminal(db)
-	queryGamesTerminal(db)
-	queryUserTerminal(db)
-}
-
-// This is temp for termial use only along with userQueryCommandInput
-func userQueryCommandExe(db *sql.DB) {
-	check, userCommand := userQueryCommandInput()
-
-	if check {
-		switch userCommand {
-		case 1:
-			queryBooksTerminal(db)
-		case 2:
-			queryMoviesTerminal(db)
-		case 3:
-			queryGamesTerminal(db)
-		case 4:
-			queryUserTerminal(db)
-		case 5:
-			queryAll(db)
-		}
-	} else {
-		println("Input not valid")
-	}
-}
-
-func userQueryCommandInput() (bool, int64) {
-	// This is for the commandline part
-	// REMOVE AFTER TUI is built
-	var command string
-	commandList := [5]int64{1, 2, 3, 4, 5}
-	fmt.Print("> ")
-	fmt.Scanln(&command)
-
-	input, err := strconv.ParseInt(command, 10, 64) // Base 10, 64-bit integer
-	if err != nil {
-		println("Not a valid input")
-	} else {
-		for _, value := range commandList {
-			if value == input {
-				return true, input
-			}
-		}
-	}
-	return false, input
-}
-
-func quaryDirectory() {
-	fmt.Println(`
-	========================
-	Commands for Quary Data
-	========================
-
-	See Books:     1
-	See Movie:     2
-	See VideoGame: 3
-	See Users:     4
-
-	Quary All:     5
-	========================
-	`)
 }

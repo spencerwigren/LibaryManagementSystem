@@ -28,14 +28,14 @@ func App(db *sql.DB) {
 			SetText(text)
 	}
 
-	footerFormate := fmt.Sprintln("Commands\nSee all Data: $All\nSearch the name of your input")
+	footerFormate := fmt.Sprintln("Commands\nSearch the name of your input\nTo Navigate: tab to go right, shift+tab to go left, enter to select")
 
 	// Layout of TUI
 	grid := tview.NewGrid().
 		SetRows(3, 0, 3).      // Setting rows height three rows
 		SetColumns(35, 0, 35). // Setting columns with three columns
 		SetBorders(true).
-		AddItem(newPrimitive("Header"), 0, 0, 1, 3, 0, 0, false).
+		AddItem(newPrimitive("Welcome"), 0, 0, 1, 3, 0, 0, false).
 		AddItem(newPrimitive(footerFormate), 2, 0, 1, 3, 0, 0, false)
 
 	// Main menu prmitive to interact with TUI
@@ -52,14 +52,7 @@ func App(db *sql.DB) {
 	menu := tview.NewForm().
 		AddFormItem(searchInput).
 		AddButton("Search", func() {
-			if searchInput.GetText() == "$All" {
-				// rowsEnteries := utils.QueryAllEntry(db)
-				// log.Printf("Log Entery: %s", rowsEnteries)
-				updateMainAll(db, app, mainTextView, searchInput)
-
-			} else {
-				updateMain(db, app, searchInput.GetText(), mainTextView, searchInput)
-			}
+			updateMain(db, app, searchInput.GetText(), mainTextView, searchInput)
 		}).
 		AddButton("Add Media", func() {
 			pages.SwitchToPage("mediaModal")
@@ -100,9 +93,10 @@ func App(db *sql.DB) {
 	// Setting Formate for input errors
 	// Default view
 	pre := "Book"
+	yearText := ""
 
 	hpn := handlePageNumber(pages, pre)
-	hy := handleYear(pages, pre)
+	hy := handleYear(pages, pre, yearText)
 	he := handleExisting(pages, pre)
 	het := handleExistingTrue(pages, pre)
 
@@ -140,17 +134,17 @@ func updateMain(db *sql.DB, app *tview.Application, searchRequest string, mainTe
 		// Updating UI
 		app.QueueUpdateDraw(func() {
 			if len(resultsText) > 1 && tableName == "books" {
-				resultOutput := fmt.Sprintf("Search Results\nTitle: %s\nPage Number: %s\nAuthor: %s\nDateTime: %s", resultsText[1], resultsText[2], resultsText[3], resultsText[4])
+				resultOutput := fmt.Sprintf("Search Results\nTitle: %s\nPage Number: %s\nAuthor: %s\nDate & Time Entered: %s", resultsText[1], resultsText[2], resultsText[3], resultsText[4])
 				// Dispalying the new result/title to the mainTextView
 				mainTextView.SetText(resultOutput)
 
 			} else if len(resultsText) > 1 && (tableName == "movies" || tableName == "videoGames") {
-				resultOutput := fmt.Sprintf("Search Results\nTitle: %s\nRating: %s\nRelease Year: %s\nDateTime: %s", resultsText[1], resultsText[2], resultsText[3], resultsText[4])
+				resultOutput := fmt.Sprintf("Search Results\nTitle: %s\nRating: %s\nRelease Year: %s\nDate & Time Entered: %s", resultsText[1], resultsText[2], resultsText[3], resultsText[4])
 				mainTextView.SetText(resultOutput)
 
 				// This may be redundent, or not???
 			} else if len(resultsText) > 1 { // Movies and VideGames have same fields
-				resultOutput := fmt.Sprintf("Search Results\nTitle: %s\nDateTime: %s", resultsText[1], resultsText[2])
+				resultOutput := fmt.Sprintf("Search Results\nTitle: %s\nDate & Time Entered: %s", resultsText[1], resultsText[2])
 				mainTextView.SetText(resultOutput)
 
 			} else {
@@ -335,15 +329,16 @@ func addMovieMedia(db *sql.DB, pages *tview.Pages) *tview.Flex {
 				yearConverted, err := strconv.Atoi(year)
 				if err != nil {
 					log.Println("ERROR:", err)
-					hy := handleYear(pages, "Movie")
+					hy := handleYear(pages, "Movie", "")
 					pages.AddPage("errModalYear", hy, true, false)
 					pages.SwitchToPage("errModalYear")
 					releaseYearInput.SetText("")
 
 					return
 
-				} else if yearConverted < 1878 { // Said to be the first year a film was released https://historycooperative.org/first-movie-ever-made/
-					hy := handleYear(pages, "Movie")
+				} else if yearConverted < 1878 || yearConverted > time.Now().Year() { // Said to be the first year a film was released https://historycooperative.org/first-movie-ever-made/
+					warningText := "Please enter a year between 1878 and the Current Year"
+					hy := handleYear(pages, "Movie", warningText)
 					pages.AddPage("errModalYear", hy, true, false)
 					pages.SwitchToPage("errModalYear")
 					releaseYearInput.SetText("")
@@ -428,14 +423,15 @@ func addVidoGameMedia(db *sql.DB, pages *tview.Pages) *tview.Flex {
 				yearConv, err := strconv.Atoi(year)
 				if err != nil {
 					log.Println("ERROR:", err)
-					hpn := handleYear(pages, "Game")
+					hpn := handleYear(pages, "Game", "")
 					pages.AddPage("errModalYear", hpn, true, false)
 					pages.SwitchToPage("errModalYear")
 					releaseYearInput.SetText("")
 
 					return
-				} else if yearConv <= 1968 { // Said to be the first year a video game was released "Tennis for Two"
-					hpn := handleYear(pages, "Game")
+				} else if yearConv <= 1968 || yearConv > time.Now().Year() { // Said to be the first year a video game was released "Tennis for Two"
+					yearText := "Please Enter a year between 1968 and the current year"
+					hpn := handleYear(pages, "Game", yearText)
 					pages.AddPage("errModalYear", hpn, true, false)
 					pages.SwitchToPage("errModalYear")
 					releaseYearInput.SetText("")
@@ -574,8 +570,9 @@ func mostRecentEntries(db *sql.DB, sideBarTextView *tview.TextView) {
 }
 
 func handlePageNumber(pages *tview.Pages, prePage string) *tview.Modal {
+	// View fOr handling wrong page number input
 	errModal := tview.NewModal().
-		SetText("Warning! Not a Valid Page Number").
+		SetText("Warning! Not a Valid Page Number\n Please enter 1 - 100,100 ").
 		AddButtons([]string{"OK"}).
 		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 
@@ -587,9 +584,10 @@ func handlePageNumber(pages *tview.Pages, prePage string) *tview.Modal {
 	return errModal
 }
 
-func handleYear(pages *tview.Pages, prePage string) *tview.Modal {
+func handleYear(pages *tview.Pages, prePage string, warningText string) *tview.Modal {
+	// View for handling wrong year input
 	errModal := tview.NewModal().
-		SetText("Warning! Not a Valid Year ").
+		SetText("Warning! Not a Valid Year\n" + warningText).
 		AddButtons([]string{"OK"}).
 		SetDoneFunc(func(buttonIndex int, buttonLabel string) {
 			pre := fmt.Sprintf("add%s", prePage)
@@ -602,6 +600,7 @@ func handleYear(pages *tview.Pages, prePage string) *tview.Modal {
 }
 
 func handleExisting(pages *tview.Pages, prePage string) *tview.Modal {
+	// view for handling if entery exists
 	errModal := tview.NewModal().
 		SetText("Warning! Entry already exist").
 		AddButtons([]string{"OK"}).
@@ -615,6 +614,7 @@ func handleExisting(pages *tview.Pages, prePage string) *tview.Modal {
 }
 
 func handleRating(pages *tview.Pages, prePage string, ratingList []string) *tview.Modal {
+	// View for handling wrong rating input
 	message := fmt.Sprintf("Warning! Entry is not a Rating\n Rating: %s", ratingList)
 
 	errModal := tview.NewModal().
@@ -630,6 +630,7 @@ func handleRating(pages *tview.Pages, prePage string, ratingList []string) *tvie
 }
 
 func handleExistingTrue(pages *tview.Pages, prePage string) *tview.Modal {
+	// second view for handling if entery doesn't exist
 	errModal := tview.NewModal().
 		SetText("Warning! Entry Doesn't exist").
 		AddButtons([]string{"OK"}).
@@ -643,6 +644,11 @@ func handleExistingTrue(pages *tview.Pages, prePage string) *tview.Modal {
 }
 
 func updateBookModal(db *sql.DB, pages *tview.Pages) *tview.Flex {
+	/*
+		View for updating existing book in database
+		To note that functions: updateMovieModal, and updateVideoGameModal
+			are based off of updateBookModal
+	*/
 	oringalTitle := tview.NewInputField().SetLabel("Enter Title of Media to Update")
 	titleUpdate := tview.NewInputField().SetLabel("Update Title:")
 	pageNumUpdate := tview.NewInputField().SetLabel("Update Page Number:")
@@ -737,15 +743,16 @@ func updateMovieModal(db *sql.DB, pages *tview.Pages) *tview.Flex {
 				yearConverted, err := strconv.Atoi(yearUp)
 				if err != nil {
 					log.Println("ERROR:", err)
-					hy := handleYear(pages, "UpdateMovie")
+					hy := handleYear(pages, "UpdateMovie", "")
 					pages.AddPage("errModalYear", hy, true, false)
 					pages.SwitchToPage("errModalYear")
 					releaseYearUpdate.SetText("")
 
 					return
 
-				} else if yearConverted < 1878 { // Said to be the first year a film was released https://historycooperative.org/first-movie-ever-made/
-					hy := handleYear(pages, "UpdateMovie")
+				} else if yearConverted < 1878 || yearConverted > time.Now().Year() { // Said to be the first year a film was released https://historycooperative.org/first-movie-ever-made/
+					warningText := "Please enter a year between 1878 and the Current Year"
+					hy := handleYear(pages, "Movie", warningText)
 					pages.AddPage("errModalYear", hy, true, false)
 					pages.SwitchToPage("errModalYear")
 					releaseYearUpdate.SetText("")
@@ -827,15 +834,16 @@ func updateVideoGameModal(db *sql.DB, pages *tview.Pages) *tview.Flex {
 				yearConverted, err := strconv.Atoi(yearUp)
 				if err != nil {
 					log.Println("ERROR:", err)
-					hy := handleYear(pages, "UpdateGame")
+					hy := handleYear(pages, "UpdateGame", "")
 					pages.AddPage("errModalYear", hy, true, false)
 					pages.SwitchToPage("errModalYear")
 					releaseYearUpdate.SetText("")
 
 					return
 
-				} else if yearConverted < 1878 { // Said to be the first year a film was released https://historycooperative.org/first-movie-ever-made/
-					hy := handleYear(pages, "UpdateGame")
+				} else if yearConverted < 1878 || yearConverted > time.Now().Year() { // Said to be the first year a film was released https://historycooperative.org/first-movie-ever-made/
+					yearText := "Please Enter a year between 1968 and the current year"
+					hy := handleYear(pages, "Game", yearText)
 					pages.AddPage("errModalYear", hy, true, false)
 					pages.SwitchToPage("errModalYear")
 					releaseYearUpdate.SetText("")
@@ -893,17 +901,4 @@ func updateVideoGameModal(db *sql.DB, pages *tview.Pages) *tview.Flex {
 
 	return updateMovieFlex
 
-}
-
-/*
-For Now this will have to do on the search all
-TODO: come back and fix this, so that it works
-*/
-func updateMainAll(db *sql.DB, app *tview.Application, mainTextView *tview.TextView, searchInput *tview.InputField) {
-
-	go func() {
-		rowsEnteries := utils.QueryAllEntry(db)
-		log.Printf("Row Enteries: %s", rowsEnteries...)
-
-	}()
 }
