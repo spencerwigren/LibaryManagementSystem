@@ -3,6 +3,8 @@
 ### How to Run 
 To Start App in Terminal
 
+Make Sure that you have Go installed on your machine
+
 If you don't have a go.mod and a go.sum file run the following code
 
 1. > go mod init LibaryManagementSystem
@@ -32,6 +34,7 @@ Do note that you will want to have the go mod init first before downloading the 
 
  **tcell** : https://pkg.go.dev/github.com/gdamore/tcell/v2
 
+**GO** : https://go.dev/
 ---
 
 ### Website:
