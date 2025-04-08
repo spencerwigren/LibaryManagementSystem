@@ -1,33 +1,33 @@
 # LibaryManagementSystem
 
-
 ### How to Run 
-*Working on Demo*
+To Start App in Terminal
 
-run these commands in the terminal
-1. >$go build main.go
-2. >$./main
+1. > go mod init LibaryManagementSystem
+2. > go mod tidy
+3. > Download Dependencies
+4. > go run main.go
 
+After you can also do
 
+1. > go build main.go
+2. > ./main
 
-**Updates**
+--- 
 
-*2025/2/26:* As seen in the .gitignore I have two .exe files
-one/is for building like this:
+### Dependencies
 
-main.exe
-1. >$go build main.go
-2. >$./main
+Make sure to have tview and go-sqlite3 downloaded before running
 
-Libarymanagementsystem.exe
-the other is for building it like this
-1. *If you don't have a go.mod init do*
-    >$go mod init LibaryManagementSystem
-    
-    Then
-2. >$go mod tidy
-3. >$go run main.go
+Do note that you will want to have the go mod init first before downloading the dependencies
 
+**tview** : https://github.com/rivo/tview
+
+**go-sqlite3** : https://github.com/mattn/go-sqlite3
+
+ **tcell** : https://pkg.go.dev/github.com/gdamore/tcell/v2
+
+---
 
 ### Website:
 https://github.com/spencerwigren/LibaryManagementSystem
