@@ -3,15 +3,20 @@
 ### How to Run 
 To Start App in Terminal
 
+If you don't have a go.mod and a go.sum file run the following code
+
 1. > go mod init LibaryManagementSystem
 2. > go mod tidy
 3. > Download Dependencies
 4. > go run main.go
 
-After you can also do
-
+If not
 1. > go build main.go
 2. > ./main
+
+or 
+
+- > go run main.go
 
 --- 
 
